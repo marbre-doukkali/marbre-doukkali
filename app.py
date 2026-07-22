@@ -187,6 +187,7 @@ if page == "📝 Saisie des Commandes":
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
+            # 🛠️ إكمال وإغلاق النص المقطوع بدقة تامة لتفادي الـ SyntaxError وتأمين التسطير لـ إكسيل
             html_invoice = '<html><head><meta charset="utf-8">'
             html_invoice += '<style>table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left; padding: 6px; font-family: Arial; }</style>'
             html_invoice += '</head><body>'
@@ -211,6 +212,7 @@ if page == "📝 Saisie des Commandes":
             html_invoice += '</table></body></html>'
 
             st.download_button(
+
                 label="📥 Imprimer / Télécharger le Bon Excel",
                 data=html_invoice.encode('utf-8'),
                 file_name=f"Bon_{label_fichier}_{nom_client}.xls",
