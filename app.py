@@ -172,10 +172,11 @@ if page == "📝 Saisie des Commandes":
         else:
             st.success("Facture Entièrement Payée")
 
-        # --- Boutons d'actions ---
+        # --- أزرار الإجراءات وحفظ البيانات ---
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button("💾 Enregistrer la commande dans le système"):
+                # نستخدم البيانات الأصلية لحفظها في مصفوفة الجلسة لضمان بقائها وعرضها الفوري
                 sauvegarder_dans_application(
                     panier_final, total_ht, total_net, avance, reste_a_payer,
                     nom_client, label_fichier, responsable_commande
@@ -183,36 +184,12 @@ if page == "📝 Saisie des Commandes":
                 st.success("Commande enregistrée avec succès dans le système !")
 
         with col_btn2:
-            df_items = pd.DataFrame(panier_final)
-            df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
+            # 🛠️ الحل البرمجي الجذري: توليد ملف XML مندمج كلياً ومسطر بخطوط واضحة ومحاذاة لليسار
+            xml_data = '<?xml version="1.0" encoding="utf-8"?><?mso-application progid="Excel.Sheet"?>'
+            xml_data += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
 
-            csv_data = df_items.to_csv(index=False, sep='\t')
-
-            excel_text = "MARBRE DOUKKALI\t\t\t\t\t\n\n"
-            excel_text += "BON DE COMMANDE - MARBRERIE\n"
-            excel_text += f"N° Dossier:\t{label_fichier}\nClient:\t{nom_client}\nResponsable:\t{responsable_commande}\nDate:\t{datetime.now().strftime('%Y-%m-%d')}\n\n"
-            excel_text += "DETAILS DES ARTICLES\n"
-            excel_text += csv_data
-            excel_text += f"\n\nRECAPITULATIF FINANCIER\n"
-            excel_text += f"TOTAL HT:\t{total_ht:.2f} DH\nTOTAL TTC (HT x 1.2):\t{total_ttc:.2f} DH\nREMISE:\t{montant_remise:.2f} DH ({remise}%)\nTOTAL NET A PAYER:\t{total_net:.2f} DH\nAVANCE VERSEE:\t{avance:.2f} DH\nRESTE A PAYER:\t{reste_a_payer:.2f} DH\n"
-
-            st.download_button(
-                label="📥 Imprimer / Télécharger le Bon Excel de cette commande",
-                data=excel_text.encode('utf-16'),
-                file_name=f"Bon_Commande_{label_fichier}_{nom_client}.xls",
-                mime="application/vnd.ms-excel"
-            )
-
-# ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
-elif page == "🗂️ Historique & Recherche":
-    st.title("🗂️ Base de Données & Historique des Commandes")
-
-    if st.session_state["historique_commandes"]:
-        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
-
-        st.header("🔍 Système de Recherche et Filtrage")
-        recherche = st.text_input("Rechercher par Nom de client, N° Dossier ou Responsable :", "")
-
-        # 🛠️ تصحيح الخطأ: إغلاق القوس المربع والمستدير بدقة متناهية لمنع انهيار مفسر بايثون
-        cond_client = df_historique["Client"].str.contains(recherche, case=False, na=False)
-        cond_dossier = df_historique["N° Dossier"].str.contains(recherche, case=False, na=False)
+            # إعداد الأنماط والتسطير والتلوين داخل إكسيل
+            xml_data += '<Styles>'
+            xml_data += '<Style ss:ID="logo"><Font ss:FontName="Arial" ss:Size="14" ss:Bold="1" ss:Color="#1f4e78"/><Alignment ss:Horizontal="Left"/></Style>'
+            xml_data += '<Style ss:ID="header"><Font ss:FontName="Arial" ss:Bold="1" ss:Color="#FFFFFF"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Interior ss:Color="#1f4e78" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>'
+            xml_data += '<Style ss:ID="cell"><Font ss:FontName="Arial"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Alignment ss:Horizontal="Left"/></Style>'
