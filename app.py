@@ -186,28 +186,18 @@ if page == "📝 Saisie des Commandes":
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            buffer_invoice = io.BytesIO()
-            # تعديل المحرك لتفادي الاعتماد على مكتبات خارجية
-            with pd.ExcelWriter(buffer_invoice, engine='xlsxwriter') as writer:
-                df_infos = pd.DataFrame({
-                    "BON DE COMMANDE": ["N° Dossier", "Client", "Responsable", "Date"],
-                    "MARBRERIE": [label_fichier, nom_client, responsable_commande, datetime.now().strftime("%Y-%m-%d")]
-                })
-                df_infos.to_excel(writer, sheet_name='Facture', startrow=1, index=False)
-                df_items.to_excel(writer, sheet_name='Facture', startrow=7, index=False)
+            # نظام توليد متوافق مع إكسيل دون استخدام أي مكتبة خارجية محجوبة
+            output_data = f"BON DE COMMANDE\n"
+            output_data += f"N° Dossier\t{label_fichier}\nClient\t{nom_client}\nResponsable\t{responsable_commande}\nDate\t{datetime.now().strftime('%Y-%m-%d')}\n\n"
+            output_data += df_items.to_csv(index=False, sep='\t')
+            output_data += f"\n\nRECAPITULATIF FINANCIER\n"
+            output_data += f"TOTAL HT\t{total_ht:.2f} DH\nTOTAL TTC (HT x 1.2)\t{total_ttc:.2f} DH\nREMISE\t{montant_remise:.2f} DH ({remise}%)\nTOTAL NET\t{total_net:.2f} DH\nAVANCE VERSEE\t{avance:.2f} DH\nRESTE A PAYER\t{reste_a_payer:.2f} DH\n"
 
-                df_totaux = pd.DataFrame({
-                    "RÉCAPITULATIF FINANCIER": ["TOTAL HT", "TOTAL TTC (HT x 1.2)", "REMISE", "TOTAL NET", "AVANCE VERSEE", "RESTE A PAYER"],
-                    "MONTANT (DH)": [f"{total_ht:.2f} DH", f"{total_ttc:.2f} DH", f"{montant_remise:.2f} DH ({remise}%)", f"{total_net:.2f} DH", f"{avance:.2f} DH", f"{reste_a_payer:.2f} DH"]
-                })
-                df_totaux.to_excel(writer, sheet_name='Facture', startrow=8 + len(df_items) + 2, index=False)
-
-            buffer_invoice.seek(0)
             st.download_button(
                 label="📥 Imprimer / Télécharger le Bon Excel de cette commande",
-                data=buffer_invoice,
-                file_name=f"Bon_Commande_{label_fichier}_{nom_client}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                data=output_data.encode('utf-16'),
+                file_name=f"Bon_Commande_{label_fichier}_{nom_client}.xls",
+                mime="application/vnd.ms-excel"
             )
 
 # ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
@@ -218,3 +208,17 @@ elif page == "🗂️ Historique & Recherche":
         df_historique = pd.DataFrame(st.session_state["historique_commandes"])
 
         st.header("🔍 Système de Recherche et Filtrage")
+        recherche = st.text_input("Rechercher par Nom de client, N° Dossier ou Responsable :", "")
+
+        if recherche:
+            df_filtre = df_historique[
+                df_historique["Client"].str.contains(recherche, case=False, na=False) |
+                df_historique["N° Dossier"].str.contains(recherche, case=False, na=False) |
+                df_historique["Responsable"].str.contains(recherche, case=False, na=False)
+            ]
+        else:
+            df_filtre = df_historique
+
+        st.dataframe(df_filtre, use_container_width=True)
+
+        # تصدير متوافق مدمج ومباشر
