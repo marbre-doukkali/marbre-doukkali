@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
-import sqlite3
 from datetime import datetime
 
-# 1. إعداد الصفحة والأمان
+# 1. Configuration et Sécurité de l'application
 st.set_page_config(page_title="Marbrerie ERP - Commandes", page_icon="Ⓜ️", layout="wide")
 
 PASSWORD_SECRET = "2017@2026"
@@ -22,7 +21,7 @@ if not st.session_state["authentifie"]:
             st.error("Mot de passe incorrect.")
     st.stop()
 
-# 2. قاعدة بيانات أسعار الرخام والجرانيت للشركة
+# 2. Base de données des prix au m² (DH)
 prix_materiaux = {
     "marmer": 600, "crema_marfil": 650, "carrara": 1100, "calacatta": 1800,
     "statuario": 2200, "nero_marquina": 750, "emperador_fonce": 800, "emperador_clair": 700,
@@ -34,41 +33,16 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
-# 3. تشغيل وإعداد قاعدة البيانات الدائمة على السيرفر لضمان ثبات الملفات
-def init_db():
-    conn = sqlite3.connect("marbrerie_data.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS commandes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date_commande TEXT,
-            num_dossier TEXT,
-            client TEXT,
-            responsable TEXT,
-            designation TEXT,
-            materiau TEXT,
-            dimensions TEXT,
-            quantite INTEGER,
-            surface REAL,
-            total_ligne REAL,
-            total_ht REAL,
-            total_ttc REAL,
-            avance REAL,
-            reste REAL
-        )
-    """)
-    conn.commit()
-    conn.close()
+# 🛠️ Stockage persistant via le cache d'état global de Streamlit
+if "historique_commandes" not in st.session_state:
+    st.session_state["historique_commandes"] = []
 
-init_db()
-
-# تهيئة الذاكرة البرمجية للعمل المستقر
 if "lignes_commande" not in st.session_state:
     st.session_state["lignes_commande"] = [
         {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
     ]
 
-# القائمة الجانبية للتنقل
+# Navigation de l'ERP
 st.sidebar.title("Ⓜ️ Menu Marbrerie")
 page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche"])
 
@@ -76,11 +50,10 @@ if st.sidebar.button("🔒 Se déconnecter"):
     st.session_state["authentifie"] = False
     st.rerun()
 
-# ================= الصفحة الأولى: إدخال وتوليد الطلبيات =================
+# ================= PAGE 1 : SAISIE DES COMMANDES =================
 if page == "📝 Saisie des Commandes":
     st.title("📝 Gestion et Création des Commandes")
 
-    # 🆕 زر "ملف جديد": يقوم بمسح الاستمارة فوراً وإعادة تعيين الحقول الافتراضية بنجاح
     if st.button("🆕 Nouveau Dossier (Vider le formulaire)"):
         st.session_state["lignes_commande"] = [
             {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
@@ -99,14 +72,11 @@ if page == "📝 Saisie des Commandes":
 
     st.header("📊 Tableau des Articles (Style Excel)")
 
-    # تحويل البيانات إلى جدول تفاعلي ذكي لمنع تجمد المتصفح عند الإدخال
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
     edited_df = st.data_editor(df_form, num_rows="dynamic", use_container_width=True, key="editor_commande")
 
-    # حفظ التعديلات بداخل الذاكرة فوراً لمنع مسح الحقول
     st.session_state["lignes_commande"] = edited_df.to_dict(orient="records")
 
-    # الحسابات المالية الدقيقة والآلية لكل سطر
     panier_final = []
     total_ht = 0.0
 
@@ -117,7 +87,6 @@ if page == "📝 Saisie des Commandes":
         larg = float(row.get("Largeur (m)", 0.30))
         qte = int(row.get("Quantité", 1))
 
-        # جلب سعر السلعة المحددة
         p_m2 = prix_materiaux.get(mat, 600)
         surf = long * larg * qte
         tot_ligne = surf * p_m2
@@ -132,7 +101,6 @@ if page == "📝 Saisie des Commandes":
             "total": round(tot_ligne, 2)
         })
 
-    # الخلاصة المالية التلقائية
     st.header("🧮 Synthèse Financière")
     total_ttc = total_ht * 1.2
 
@@ -147,41 +115,46 @@ if page == "📝 Saisie des Commandes":
     with col_finance2:
         avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
 
-    montant_remise = total_ttc * (remise / 100)
-    total_net = total_ttc - montant_remise
-    reste_a_payer = total_net - avance
+        montant_remise = total_ttc * (remise / 100)
+        total_net = total_ttc - montant_remise
+        reste_a_payer = total_net - avance
 
-    st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
-    st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
+        st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
+        st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
 
-    if reste_a_payer > 0:
-        st.warning(f"Reste à payer : {reste_a_payer:.2f} DH")
-    else:
-        st.success("Facture Entièrement Payée")
+        if reste_a_payer > 0:
+            st.warning(f"Reste à payer : {reste_a_payer:.2f} DH")
+        else:
+            st.success("Facture Entièrement Payée")
 
-    # أزرار الحفظ وتوليد الفاتورة المسطرة
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
-        # 💾 زر الحفظ المصلح: يقوم بكتابة البيانات فوراً بداخل قاعدة البيانات دون اختفاء
         if st.button("💾 Enregistrer la commande dans le système"):
             date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            conn = sqlite3.connect("marbrerie_data.db")
-            cursor = conn.cursor()
             for item in panier_final:
-                cursor.execute("""
-                    INSERT INTO commandes (date_commande, num_dossier, client, responsable, designation, materiau, dimensions, quantite, surface, total_ligne, total_ht, total_ttc, avance, reste)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (date_actuelle, label_fichier, nom_client, responsable_commande, item["designation"], item["materiau"], item["dimensions"], item["quantite"], item["surface"], item["total"], total_ht, total_ttc, avance, reste_a_payer))
-            conn.commit()
-            conn.close()
-            st.success("Commande enregistrée avec succès de façon permanente !")
+                st.session_state["historique_commandes"].append({
+                    "Date Commande": date_actuelle,
+                    "N° Dossier": label_fichier,
+                    "Client": nom_client,
+                    "Responsable": responsable_commande,
+                    "Désignation": item["designation"],
+                    "Matériau": item["materiau"],
+                    "Dimensions": item["dimensions"],
+                    "Quantité": item["quantite"],
+                    "Surface (m2)": item["surface"],
+                    "Total Ligne HT (DH)": item["total"],
+                    "Total HT Commande (DH)": round(total_ht, 2),
+                    "Total TTC (DH)": round(total_net, 2),
+                    "Avance (DH)": round(avance, 2),
+                    "Reste (DH)": round(reste_a_payer, 2)
+                })
+            st.success("Commande enregistrée avec succès dans l'historique !")
 
     with col_btn2:
         if panier_final:
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # إحداث التسطير الأسود والدمج المباشر لجداول إكسيل مع محاذاة الشعار لليسار
             html_invoice = '<html><head><meta charset="utf-8">'
             html_invoice += '<style>table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left; padding: 6px; font-family: Arial; }</style>'
             html_invoice += '</head><body>'
@@ -212,9 +185,25 @@ if page == "📝 Saisie des Commandes":
                 mime="application/vnd.ms-excel"
             )
 
-# ================= الصفحة الثانية: قاعدة البيانات والبحث والحذف =================
+# ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
 elif page == "🗂️ Historique & Recherche":
-    st.title("🗂️ Base de Données & Historique Permanent")
+    st.title("🗂️ Base de Données & Historique des Commandes")
 
-    # جلب البيانات المخزنة بشكل صلب ومستقر
-    conn = sqlite3.connect("marbrerie_data.db")
+    if st.session_state["historique_commandes"]:
+        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
+
+        st.header("🔍 Système de Recherche")
+        recherche = st.text_input("Rechercher par Nom, N° Dossier ou Responsable :", "")
+
+        cond_client = df_historique["Client"].str.contains(recherche, case=False, na=False)
+        cond_dossier = df_historique["N° Dossier"].str.contains(recherche, case=False, na=False)
+        cond_resp = df_historique["Responsable"].str.contains(recherche, case=False, na=False)
+
+        df_filtre = df_historique[cond_client | cond_dossier | cond_resp]
+
+        st.dataframe(df_filtre, use_container_width=True)
+
+        html_global = '<html><head><meta charset="utf-8">'
+        html_global += '<style>table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left; padding: 6px; font-family: Arial; }</style>'
+        html_global += '</head><body>'
+        html_global += '<table><tr><td style="border:none; font-size:16px; font-weight:bold; color:#1f4e78;">MARBRE DOUKKALI</td></tr></table><br>'
