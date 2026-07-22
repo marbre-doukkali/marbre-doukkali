@@ -177,7 +177,7 @@ st.header("📊 Tableau des Articles de la Commande (Saisie)")
 st.markdown('</div>', unsafe_allow_html=True)
 
 panier_final = []
-total_brut = 0.0
+total_ht = 0.0
 indices_a_supprimer = []
 
 # Saisie des articles
@@ -210,7 +210,7 @@ for i, ligne in enumerate(st.session_state["lignes_commande"]):
     prix_m2 = prix_materiaux[materiau]
     surface_totale = longueur * largeur * quantite
     total_ligne = surface_totale * prix_m2
-    total_brut += total_ligne * 1.2
+    total_ht += total_ligne
 
     panier_final.append({
         "designation": designation,
@@ -247,7 +247,7 @@ with col_fin1:
 with col_fin2:
     avance = st.number_input("Acompte / Avance versé (DH) :", min_value=0.0, value=0.0, step=100.0)
 
-total_net = max(0.0, total_brut - remise)
+total_net = max(0.0, total_ht - remise)
 reste_a_payer = max(0.0, total_net - avance)
 
 with col_fin3:
@@ -256,3 +256,14 @@ with col_fin3:
 # Bouton de sauvegarde locale avant impression
 if st.button("💾 Enregistrer la commande dans l'historique", type="secondary"):
     sauvegarder_dans_application(panier_final, total_net, avance, reste_a_payer, nom_client, label_fichier, responsable_commande)
+# Bouton déclenchant l'impression native du navigateur
+st.markdown('<button class="btn-print" onclick="window.print()">🖨️ Imprimer la Commande (Format Excel)</button>', unsafe_allow_html=True)
+@media print {
+    /* Cache absolument tout sauf la zone du bon de commande */
+    [data-testid="stSidebar"], .stButton, div.row-widget.stRadio,
+    [data-testid="stHeader"], iframe, header, footer,
+    div[data-testid="stForm"], .btn-print, .no-print {
+        display: none !important;
+    }
+    /* ... suite des règles de mise en page papier ... */
+}
