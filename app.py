@@ -34,7 +34,7 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
-# 🛠️ INITIALISATION DU STOCKAGE PERMANENT (SQLite)
+# 3. Initialisation du Stockage Permanent (SQLite)
 def init_db():
     conn = sqlite3.connect("marbrerie_data.db")
     cursor = conn.cursor()
@@ -125,12 +125,12 @@ if page == "📝 Saisie des Commandes":
         total_ht += total_ligne
 
         panier_final.append({
-            "Désignation": designation,
-            "Matériau": materiau.upper(),
-            "Dimensions": f"{longueur}x{largeur}",
-            "Quantité": quantite,
-            "Surface (m2)": round(surface_totale, 2),
-            "Total HT (DH)": round(total_ligne, 2)
+            "designation": designation,
+            "materiau": materiau.upper(),
+            "dimensions": f"{longueur}x{largeur}",
+            "quantite": quantite,
+            "surface": round(surface_totale, 2),
+            "total": round(total_ligne, 2)
         })
         st.caption(f"📐 Surface: {surface_totale:.2f} m² | 💰 Total Ligne HT: {total_ligne:.2f} DH")
         st.markdown("---")
@@ -170,7 +170,6 @@ if page == "📝 Saisie des Commandes":
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
-            # 💾 SAUVEGARDE DIRECTE DANS LE FICHIER DE STOCKAGE (SQLITE)
             if st.button("💾 Enregistrer la commande dans le système"):
                 date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 conn = sqlite3.connect("marbrerie_data.db")
@@ -179,13 +178,14 @@ if page == "📝 Saisie des Commandes":
                     cursor.execute("""
                         INSERT INTO commandes (date_commande, num_dossier, client, responsable, designation, materiau, dimensions, quantite, surface, total_ligne, total_ht, total_ttc, avance, reste)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (date_actuelle, label_fichier, nom_client, responsable_commande, item["Désignation"], item["Matériau"], item["Dimensions"], item["Quantité"], item["Surface (m2)"], item["Total HT (DH)"], total_ht, total_ttc, avance, reste_a_payer))
+                    """, (date_actuelle, label_fichier, nom_client, responsable_commande, item["designation"], item["materiau"], item["dimensions"], item["quantite"], item["surface"], item["total"], total_ht, total_ttc, avance, reste_a_payer))
                 conn.commit()
                 conn.close()
                 st.success("Commande enregistrée avec succès de façon permanente !")
 
         with col_btn2:
             df_items = pd.DataFrame(panier_final)
+            df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
             html_invoice = '<html><head><meta charset="utf-8">'
             html_invoice += '<style>table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left; padding: 6px; font-family: Arial; }</style>'
@@ -211,3 +211,8 @@ if page == "📝 Saisie des Commandes":
             html_invoice += '</table></body></html>'
 
             st.download_button(
+                label="📥 Imprimer / Télécharger le Bon Excel",
+                data=html_invoice.encode('utf-8'),
+                file_name=f"Bon_{label_fichier}_{nom_client}.xls",
+                mime="application/vnd.ms-excel"
+            )
