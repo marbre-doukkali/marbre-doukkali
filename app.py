@@ -34,17 +34,15 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
-# Initialisation de la base de données interne en mémoire pour stocker l'historique
+# تفعيل التخزين الدائم لضمان عدم اختفاء الملفات عند الانتقال بين الصفحات
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
-# Initialisation du tableau dynamique d'édition si vide
 if "lignes_commande" not in st.session_state:
     st.session_state["lignes_commande"] = [
         {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
     ]
 
-# Fonction pour sauvegarder en interne dans l'application
 def sauvegarder_dans_application(panier_items, total_ht, total_ttc, avance, reste, client_nom, nom_fichier, responsable):
     date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     for item in panier_items:
@@ -84,7 +82,6 @@ if page == "📝 Saisie des Commandes":
         ]
         st.rerun()
 
-    # --- Informations Dossier et Client ---
     st.header("📂 Informations du Dossier actuel")
     col_info1, col_info2, col_info3 = st.columns(3)
 
@@ -95,7 +92,6 @@ if page == "📝 Saisie des Commandes":
     with col_info3:
         responsable_commande = st.text_input("Responsable du suivi (Vendeur) :", "Nadim Jadoui")
 
-    # --- Tableau des articles type Excel ---
     st.header("📊 Tableau des Articles")
     panier_final = []
     total_ht = 0.0
@@ -143,10 +139,8 @@ if page == "📝 Saisie des Commandes":
         )
         st.rerun()
 
-    # 4. Calculs financiers et validation
     if panier_final:
         st.header("🧮 Synthèse Financière")
-
         total_ttc = total_ht * 1.2
 
         col_f1, col_f2 = st.columns(2)
@@ -172,7 +166,6 @@ if page == "📝 Saisie des Commandes":
         else:
             st.success("Facture Entièrement Payée")
 
-        # --- أزرار الإجراءات وحفظ البيانات المصلحة ---
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button("💾 Enregistrer la commande dans le système"):
@@ -183,14 +176,43 @@ if page == "📝 Saisie des Commandes":
                 st.success("Commande enregistrée avec succès dans le système !")
 
         with col_btn2:
-            # بناء ملف إكسيل مصلح ومسطر بالكامل بحدود حقيقية ومحاذاة لليسار
-            xml_data = '<?xml version="1.0" encoding="utf-8"?><?mso-application progid="Excel.Sheet"?>'
-            xml_data += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+            df_items = pd.DataFrame(panier_final)
+            df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            xml_data += '<Styles>'
-            xml_data += '<Style ss:ID="logo"><Font ss:FontName="Arial" ss:Size="14" ss:Bold="1" ss:Color="#1f4e78"/><Alignment ss:Horizontal="Left"/></Style>'
-            xml_data += '<Style ss:ID="header"><Font ss:FontName="Arial" ss:Bold="1" ss:Color="#FFFFFF"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Interior ss:Color="#1f4e78" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>'
-            xml_data += '<Style ss:ID="cell"><Font ss:FontName="Arial"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Alignment ss:Horizontal="Left"/></Style>'
-            xml_data += '<Style ss:ID="total"><Font ss:FontName="Arial" ss:Bold="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Interior ss:Color="#e2efda" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>'
-            xml_data += '</Styles>'
+            # 🛠️ الحل البرمجي الجذري والنهائي لتوليد ملف إكسيل حقيقي مسطر ومحاذاة لليسار عبر XlsxWriter الأصيل المدمج في بايثون
+            buffer_excel = io.BytesIO()
+            with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
+                workbook = writer.book
+                worksheet = workbook.add_worksheet('Facture')
 
+                # إعداد الأنماط والتسطير والمحاذاة لليسار
+                fmt_logo = workbook.add_format({'font_name': 'Arial', 'font_size': 14, 'bold': True, 'font_color': '#1f4e78', 'align': 'left'})
+                fmt_title = workbook.add_format({'font_name': 'Arial', 'font_size': 12, 'bold': True, 'align': 'left'})
+                fmt_header = workbook.add_format({'font_name': 'Arial', 'bold': True, 'font_color': '#FFFFFF', 'bg_color': '#1f4e78', 'border': 1, 'align': 'left'})
+                fmt_cell = workbook.add_format({'font_name': 'Arial', 'border': 1, 'align': 'left'})
+                fmt_total = workbook.add_format({'font_name': 'Arial', 'bold': True, 'bg_color': '#e2efda', 'border': 1, 'align': 'left'})
+
+                # كتابة شعار MARBRE DOUKKALI أعلى اليسار
+                worksheet.write('A1', 'MARBRE DOUKKALI', fmt_logo)
+                worksheet.write('A2', 'BON DE COMMANDE - MARBRERIE', fmt_title)
+
+                # معلومات العميل
+                infos_client = [
+                    ("N° Dossier:", label_fichier),
+                    ("Client:", nom_client),
+                    ("Responsable:", responsable_commande),
+                    ("Date:", datetime.now().strftime("%Y-%m-%d"))
+                ]
+                row_idx = 4
+                for k, v in infos_client:
+                    worksheet.write(row_idx, 0, k, fmt_cell)
+                    worksheet.write(row_idx, 1, v, fmt_cell)
+                    row_idx += 1
+
+                row_idx += 1
+                # كتابة ترويسة الجدول المسطر
+                for col_num, col_name in enumerate(df_items.columns):
+                    worksheet.write(row_idx, col_num, col_name, fmt_header)
+
+                # كتابة مواد السلع
+                row_idx += 1
