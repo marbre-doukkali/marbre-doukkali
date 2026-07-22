@@ -258,12 +258,3 @@ if st.button("💾 Enregistrer la commande dans l'historique", type="secondary")
     sauvegarder_dans_application(panier_final, total_net, avance, reste_a_payer, nom_client, label_fichier, responsable_commande)
 # Bouton déclenchant l'impression native du navigateur
 st.markdown('<button class="btn-print" onclick="window.print()">🖨️ Imprimer la Commande (Format Excel)</button>', unsafe_allow_html=True)
-@media print {
-    /* Cache absolument tout sauf la zone du bon de commande */
-    [data-testid="stSidebar"], .stButton, div.row-widget.stRadio,
-    [data-testid="stHeader"], iframe, header, footer,
-    div[data-testid="stForm"], .btn-print, .no-print {
-        display: none !important;
-    }
-    /* ... suite des règles de mise en page papier ... */
-}
