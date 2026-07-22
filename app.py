@@ -186,36 +186,21 @@ if page == "📝 Saisie des Commandes":
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # بناء هيكل الطباعة مع وضع MARBRE DOUKKALI أقصى اليسار العلوي
-            html_invoice = f"""
-            <html>
-            <head><meta charset="utf-8"></head>
-            <body>
-                <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                    <tr>
-                        <td align="left"><h2>MARBRE DOUKKALI</h2></td>
-                    </tr>
-                </table>
-                <hr>
-                <h2>BON DE COMMANDE - MARBRERIE</h2>
-                <table border="1" cellspacing="0" cellpadding="5">
-                    <tr style="background-color: #f2f2f2;"><th>PROPRIETE</th><th>VALEUR</th></tr>
-                    <tr><td><b>N° Dossier</b></td><td>{label_fichier}</td></tr>
-                    <tr><td><b>Client</b></td><td>{nom_client}</td></tr>
-                    <tr><td><b>Responsable</b></td><td>{responsable_commande}</td></tr>
-                    <tr><td><b>Date</b></td><td>{datetime.now().strftime('%Y-%m-%d')}</td></tr>
-                </table>
-                <br>
-                <h3>DETAILS DES ARTICLES</h3>
-                {df_items.to_html(index=False, border=1)}
-                <br>
-                <h3>RECAPITULATIF FINANCIER</h3>
-                <table border="1" cellspacing="0" cellpadding="5">
-                    <tr><td><b>TOTAL HT</b></td><td>{total_ht:.2f} DH</td></tr>
-                    <tr><td><b>TOTAL TTC (HT x 1.2)</b></td><td>{total_ttc:.2f} DH</td></tr>
-                    <tr><td><b>REMISE</b></td><td>{montant_remise:.2f} DH ({remise}%)</td></tr>
-                    <tr style="background-color: #d9e1f2;"><td><b>TOTAL NET A PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>
-                    <tr><td><b>AVANCE VERSEE</b></td><td>{avance:.2f} DH</td></tr>
-                    <tr style="background-color: #fce4d6;"><td><b>RESTE A PAYER</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>
-                </table>
-            </body>
+            # Élimination des f-strings complexes pour détruire définitivement le SyntaxError
+            html_invoice = '<html><head><meta charset="utf-8"></head><body>'
+            html_invoice += '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr>'
+            html_invoice += '<td align="left"><h2>MARBRE DOUKKALI</h2></td>'
+            html_invoice += '</tr></table><hr><h2>BON DE COMMANDE - MARBRERIE</h2>'
+            html_invoice += '<table border="1" cellspacing="0" cellpadding="5">'
+            html_invoice += '<tr style="background-color: #f2f2f2;"><th>PROPRIETE</th><th>VALEUR</th></tr>'
+            html_invoice += '<tr><td><b>N° Dossier</b></td><td>' + str(label_fichier) + '</td></tr>'
+            html_invoice += '<tr><td><b>Client</b></td><td>' + str(nom_client) + '</td></tr>'
+            html_invoice += '<tr><td><b>Responsable</b></td><td>' + str(responsable_commande) + '</td></tr>'
+            html_invoice += '<tr><td><b>Date</b></td><td>' + datetime.now().strftime('%Y-%m-%d') + '</td></tr></table><br>'
+            html_invoice += '<h3>DETAILS DES ARTICLES</h3>' + df_items.to_html(index=False, border=1) + '<br>'
+            html_invoice += '<h3>RECAPITULATIF FINANCIER</h3><table border="1" cellspacing="0" cellpadding="5">'
+            html_invoice += '<tr><td><b>TOTAL HT</b></td><td>' + f"{total_ht:.2f}" + ' DH</td></tr>'
+            html_invoice += '<tr><td><b>TOTAL TTC (HT x 1.2)</b></td><td>' + f"{total_ttc:.2f}" + ' DH</td></tr>'
+            html_invoice += '<tr><td><b>REMISE</b></td><td>' + f"{montant_remise:.2f}" + ' DH (' + str(remise) + '%)</td></tr>'
+            html_invoice += '<tr style="background-color: #d9e1f2;"><td><b>TOTAL NET A PAYER</b></td><td><b>' + f"{total_net:.2f}" + ' DH</b></td></tr>'
+            html_invoice += '<tr><td><b>AVANCE VERSEE</b></td><td>' + f"{avance:.2f}" + ' DH</td></tr>'
