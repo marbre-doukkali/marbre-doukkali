@@ -172,11 +172,10 @@ if page == "📝 Saisie des Commandes":
         else:
             st.success("Facture Entièrement Payée")
 
-        # --- أزرار الإجراءات وحفظ البيانات ---
+        # --- أزرار الإجراءات وحفظ البيانات المصلحة ---
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button("💾 Enregistrer la commande dans le système"):
-                # نستخدم البيانات الأصلية لحفظها في مصفوفة الجلسة لضمان بقائها وعرضها الفوري
                 sauvegarder_dans_application(
                     panier_final, total_ht, total_net, avance, reste_a_payer,
                     nom_client, label_fichier, responsable_commande
@@ -184,12 +183,14 @@ if page == "📝 Saisie des Commandes":
                 st.success("Commande enregistrée avec succès dans le système !")
 
         with col_btn2:
-            # 🛠️ الحل البرمجي الجذري: توليد ملف XML مندمج كلياً ومسطر بخطوط واضحة ومحاذاة لليسار
+            # بناء ملف إكسيل مصلح ومسطر بالكامل بحدود حقيقية ومحاذاة لليسار
             xml_data = '<?xml version="1.0" encoding="utf-8"?><?mso-application progid="Excel.Sheet"?>'
             xml_data += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
 
-            # إعداد الأنماط والتسطير والتلوين داخل إكسيل
             xml_data += '<Styles>'
             xml_data += '<Style ss:ID="logo"><Font ss:FontName="Arial" ss:Size="14" ss:Bold="1" ss:Color="#1f4e78"/><Alignment ss:Horizontal="Left"/></Style>'
             xml_data += '<Style ss:ID="header"><Font ss:FontName="Arial" ss:Bold="1" ss:Color="#FFFFFF"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Interior ss:Color="#1f4e78" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>'
             xml_data += '<Style ss:ID="cell"><Font ss:FontName="Arial"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Alignment ss:Horizontal="Left"/></Style>'
+            xml_data += '<Style ss:ID="total"><Font ss:FontName="Arial" ss:Bold="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Interior ss:Color="#e2efda" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>'
+            xml_data += '</Styles>'
+
