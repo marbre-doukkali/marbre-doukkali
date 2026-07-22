@@ -4,7 +4,7 @@ import io
 from datetime import datetime
 
 # 1. Configuration de la page et sécurité d'accès de base
-st.set_page_config(page_title="Marbrerie - Commandes Privées", page_icon="Ⓜ️", layout="wide")
+st.set_page_config(page_title="Marbrerie ERP - Commandes", page_icon="Ⓜ️", layout="wide")
 
 PASSWORD_SECRET = "2017@2026"
 
@@ -38,10 +38,15 @@ prix_materiaux = {
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
+# Initialisation du tableau dynamique d'édition si vide
+if "lignes_commande" not in st.session_state:
+    st.session_state["lignes_commande"] = [
+        {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
+    ]
+
 # Fonction pour sauvegarder en interne dans l'application
 def sauvegarder_dans_application(panier_items, total_ht, total_ttc, avance, reste, client_nom, nom_fichier, responsable):
     date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     for item in panier_items:
         nouvelle_ligne = {
             "Date Commande": date_actuelle,
@@ -61,138 +66,160 @@ def sauvegarder_dans_application(panier_items, total_ht, total_ttc, avance, rest
         }
         st.session_state["historique_commandes"].append(nouvelle_ligne)
 
-st.title("Ⓜ️ Système de Gestion des Commandes - Marbre & Granit")
+# --- NAVIGATION SIDEBAR (Système Multi-pages) ---
+st.sidebar.title("Ⓜ️ Menu Marbrerie")
+page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche"])
 
 if st.sidebar.button("🔒 Se déconnecter"):
     st.session_state["authentifie"] = False
     st.rerun()
 
-# 3. Initialisation du tableau dynamique d'édition
-if "lignes_commande" not in st.session_state:
-    st.session_state["lignes_commande"] = [
-        {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
-    ]
+# ================= PAGE 1 : SAISIE DES COMMANDES =================
+if page == "📝 Saisie des Commandes":
+    st.title("📝 Gestion et Création des Commandes")
 
-# --- Informations Dossier et Client ---
-st.header("📂 Informations et Classification du Dossier")
-col_info1, col_info2, col_info3 = st.columns(3)
+    # Bouton Nouveau Dossier pour réinitialiser
+    if st.button("🆕 Nouveau Dossier (Vider le formulaire)"):
+        st.session_state["lignes_commande"] = [
+            {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
+        ]
+        st.rerun()
 
-with col_info1:
-    label_fichier = st.text_input("N° Dossier / Référence :", "DOS-2026-001")
-with col_info2:
-    nom_client = st.text_input("Nom du client :", "Client_Anonyme")
-with col_info3:
-    responsable_commande = st.text_input("Responsable du suivi (Vendeur) :", "Nadim Jadoui")
+    # --- Informations Dossier et Client ---
+    st.header("📂 Informations du Dossier actuel")
+    col_info1, col_info2, col_info3 = st.columns(3)
 
-# --- Tableau des articles type Excel ---
-st.header("📊 Tableau des Articles de la Commande")
+    with col_info1:
+        label_fichier = st.text_input("N° Dossier / Référence :", "DOS-2026-001")
+    with col_info2:
+        nom_client = st.text_input("Nom du client :", "Client_Anonyme")
+    with col_info3:
+        responsable_commande = st.text_input("Responsable du suivi (Vendeur) :", "Nadim Jadoui")
 
-panier_final = []
-total_ht = 0.0
+    # --- Tableau des articles type Excel ---
+    st.header("📊 Tableau des Articles")
+    panier_final = []
+    total_ht = 0.0
 
-# Affichage dynamique des lignes
-for i, ligne in enumerate(st.session_state["lignes_commande"]):
-    st.markdown(f"**Ligne N° {i+1} :**")
-    c1, c2, c3, c4, c5 = st.columns(5)
+    # Affichage dynamique des lignes
+    for i, ligne in enumerate(st.session_state["lignes_commande"]):
+        st.markdown(f"**Ligne N° {i+1} :**")
+        c1, c2, c3, c4, c5 = st.columns(5)
 
-    with c1:
-        designation = st.text_input("Désignation / Usage", value=ligne["designation"], key=f"des_{i}")
-    with c2:
-        materiau = st.selectbox("Matériau", list(prix_materiaux.keys()), index=list(prix_materiaux.keys()).index(ligne["materiau"]) if ligne["materiau"] in prix_materiaux else 0, key=f"mat_{i}")
-    with c3:
-        longueur = st.number_input("Longueur (m)", min_value=0.01, value=ligne["longueur"], step=0.01, key=f"long_{i}")
-    with c4:
-        largeur = st.number_input("Largeur (m)", min_value=0.01, value=ligne["largeur"], step=0.01, key=f"larg_{i}")
-    with c5:
-        quantite = st.number_input("Quantité", min_value=1, value=ligne["quantite"], step=1, key=f"qte_{i}")
+        with c1:
+            designation = st.text_input("Désignation / Usage", value=ligne["designation"], key=f"des_{i}")
+        with c2:
+            materiau = st.selectbox("Matériau", list(prix_materiaux.keys()), index=list(prix_materiaux.keys()).index(ligne["materiau"]) if ligne["materiau"] in prix_materiaux else 0, key=f"mat_{i}")
+        with c3:
+            longueur = st.number_input("Longueur (m)", min_value=0.01, value=ligne["longueur"], step=0.01, key=f"long_{i}")
+        with c4:
+            largeur = st.number_input("Largeur (m)", min_value=0.01, value=ligne["largeur"], step=0.01, key=f"larg_{i}")
+        with c5:
+            quantite = st.number_input("Quantité", min_value=1, value=ligne["quantite"], step=1, key=f"qte_{i}")
 
-    # Mise à jour immédiate dans la session
-    st.session_state["lignes_commande"][i] = {
-        "designation": designation,
-        "materiau": materiau,
-        "longueur": longueur,
-        "largeur": largeur,
-        "quantite": quantite
-    }
+        st.session_state["lignes_commande"][i] = {
+            "designation": designation, "materiau": materiau,
+            "longueur": longueur, "largeur": largeur, "quantite": quantite
+        }
 
-    # Calculs de la ligne HT
-    prix_m2 = prix_materiaux[materiau]
-    surface_totale = longueur * largeur * quantite
-    total_ligne = surface_totale * prix_m2
-    total_ht += total_ligne
+        prix_m2 = prix_materiaux[materiau]
+        surface_totale = longueur * largeur * quantite
+        total_ligne = surface_totale * prix_m2
+        total_ht += total_ligne
 
-    panier_final.append({
-        "designation": designation,
-        "materiau": materiau.upper(),
-        "dimensions": f"{longueur}x{largeur}",
-        "quantite": quantite,
-        "surface": surface_totale,
-        "total": total_ligne
-    })
+        panier_final.append({
+            "Désignation": designation,
+            "Matériau": materiau.upper(),
+            "Dimensions": f"{longueur}x{largeur}",
+            "Quantité": quantite,
+            "Surface (m2)": surface_totale,
+            "Total HT (DH)": total_ligne
+        })
 
-    st.caption(f"📐 Surface: {surface_totale:.2f} m² | 💰 Total Ligne HT: {total_ligne:.2f} DH")
-    st.markdown("---")
+        st.caption(f"📐 Surface: {surface_totale:.2f} m² | 💰 Total Ligne HT: {total_ligne:.2f} DH")
+        st.markdown("---")
 
-# --- Bouton Plus (+) pour insérer une nouvelle ligne ---
-if st.button("➕ Ajouter une nouvelle ligne (Style Excel)"):
-    st.session_state["lignes_commande"].append(
-        {"designation": "Nouvel article", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
-    )
-    st.rerun()
-
-# 4. Calculs financiers et validation
-if panier_final:
-    st.subheader(f"TOTAL HT : {total_ht:.2f} DH")
-
-    # الحساب التلقائي بالضرب في 1.2
-    total_ttc = total_ht * 1.2
-    st.markdown(f"**TOTAL TTC (HT x 1.2) :** {total_ttc:.2f} DH")
-
-    col_finance1, col_finance2 = st.columns(2)
-    with col_finance1:
-        remise = st.number_input("Remise globale (%)", min_value=0.0, max_value=100.0, value=0.0)
-    with col_finance2:
-        avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
-
-    montant_remise = total_ttc * (remise / 100)
-    total_net = total_ttc - montant_remise
-    reste_a_payer = total_net - avance
-
-    st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
-    st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
-
-    if reste_a_payer > 0:
-        statut_paiement = f"Reste à payer : {reste_a_payer:.2f} DH (Facture semi-payée)"
-        st.warning(statut_paiement)
-    else:
-        statut_paiement = "Facture Entièrement Payée"
-        st.success(statut_paiement)
-
-    # --- Bouton d'enregistrement interne ---
-    if st.button("💾 Enregistrer la commande dans le tableau de l'application"):
-        sauvegarder_dans_application(
-            panier_final, total_ht, total_net, avance, reste_a_payer,
-            nom_client, label_fichier, responsable_commande
+    if st.button("➕ Ajouter une nouvelle ligne (Style Excel)"):
+        st.session_state["lignes_commande"].append(
+            {"designation": "Nouvel article", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
         )
-        st.success("Commande enregistrée avec succès dans le tableau historique ci-dessous !")
+        st.rerun()
 
-# --- Affichage du tableau historique interne (Style Excel) ---
-st.header("🗂️ Tableau Historique des Commandes Enregistrées")
-if st.session_state["historique_commandes"]:
-    df_historique = pd.DataFrame(st.session_state["historique_commandes"])
-    st.dataframe(df_historique, use_container_width=True)
+    # 4. Calculs financiers et validation
+    if panier_final:
+        st.header("🧮 Synthèse Financière")
 
-    # Système d'impression Excel
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df_historique.to_excel(writer, index=False, sheet_name='Commandes')
-    buffer.seek(0)
+        total_ttc = total_ht * 1.2
 
-    st.download_button(
-        label="📥 Télécharger / Imprimer l'historique complet en Excel (.xlsx)",
-        data=buffer,
-        file_name=f"Historique_Commandes_{datetime.now().strftime('%Y%m%d')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-else:
-    st.write("Aucune commande enregistrée pour le moment dans cette session.")
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            st.subheader(f"TOTAL HT : {total_ht:.2f} DH")
+            st.subheader(f"TOTAL TTC (HT x 1.2) : {total_ttc:.2f} DH")
+
+        col_finance1, col_finance2 = st.columns(2)
+        with col_finance1:
+            remise = st.number_input("Remise globale (%)", min_value=0.0, max_value=100.0, value=0.0)
+        with col_finance2:
+            avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
+
+        montant_remise = total_ttc * (remise / 100)
+        total_net = total_ttc - montant_remise
+        reste_a_payer = total_net - avance
+
+        st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
+        st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
+
+        if reste_a_payer > 0:
+            st.warning(f"Reste à payer : {reste_a_payer:.2f} DH (Facture semi-payée)")
+        else:
+            st.success("Facture Entièrement Payée")
+
+        # --- Boutons d'actions ---
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button("💾 Enregistrer la commande dans le système"):
+                sauvegarder_dans_application(
+                    panier_final, total_ht, total_net, avance, reste_a_payer,
+                    nom_client, label_fichier, responsable_commande
+                )
+                st.success("Commande enregistrée avec succès dans le système !")
+
+        with col_btn2:
+            # GÉNÉRATION D'UN BON DE COMMANDE EXCEL PRO ET STRUCTURÉ
+            df_items = pd.DataFrame(panier_final)
+
+            buffer_invoice = io.BytesIO()
+            with pd.ExcelWriter(buffer_invoice, engine='openpyxl') as writer:
+                # 1. Infos client en haut
+                df_infos = pd.DataFrame({
+                    "PROPRIETE": ["N° Dossier", "Client", "Responsable", "Date"],
+                    "VALEUR": [label_fichier, nom_client, responsable_commande, datetime.now().strftime("%Y-%m-%d")]
+                })
+                df_infos.to_excel(writer, sheet_name='Bon de Commande', startrow=1, index=False)
+
+                # 2. Tableau des articles au milieu
+                df_items.to_excel(writer, sheet_name='Bon de Commande', startrow=8, index=False)
+
+                # 3. Totaux en bas
+                df_totaux = pd.DataFrame({
+                    "FINANCE": ["TOTAL HT", "TOTAL TTC (x1.2)", "REMISE", "TOTAL NET", "AVANCE", "RESTE A PAYER"],
+                    "MONTANT (DH)": [total_ht, total_ttc, montant_remise, total_net, avance, reste_a_payer]
+                })
+                df_totaux.to_excel(writer, sheet_name='Bon de Commande', startrow=9 + len(df_items) + 2, index=False)
+
+            buffer_invoice.seek(0)
+            st.download_button(
+                label="📥 Imprimer / Télécharger le Bon Excel de cette commande",
+                data=buffer_invoice,
+                file_name=f"Bon_{label_fichier}_{nom_client}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+# ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
+elif page == "🗂️ Historique & Recherche":
+    st.title("🗂️ Base de Données & Historique des Commandes")
+
+    if st.session_state["historique_commandes"]:
+        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
+
+        # --- Barre de Recherche Avancée ---
