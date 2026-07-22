@@ -127,13 +127,14 @@ if page == "📝 Saisie des Commandes":
         total_ligne = surface_totale * prix_m2
         total_ht += total_ligne
 
+        # تصحيح المفاتيح لتتوافق تماماً مع دالة الحفظ ودالة تصدير الإكسيل
         panier_final.append({
-            "Désignation": designation,
-            "Matériau": materiau.upper(),
-            "Dimensions": f"{longueur}x{largeur}",
-            "Quantité": quantite,
-            "Surface (m2)": surface_totale,
-            "Total HT (DH)": total_ligne
+            "designation": designation,
+            "materiau": materiau.upper(),
+            "dimensions": f"{longueur}x{largeur}",
+            "quantite": quantite,
+            "surface": surface_totale,
+            "total": total_ligne
         })
 
         st.caption(f"📐 Surface: {surface_totale:.2f} m² | 💰 Total Ligne HT: {total_ligne:.2f} DH")
@@ -172,7 +173,7 @@ if page == "📝 Saisie des Commandes":
         if reste_a_payer > 0:
             st.warning(f"Reste à payer : {reste_a_payer:.2f} DH (Facture semi-payée)")
         else:
-            st.success("Facture Entièrement Payée")
+            st.success("Facture Entérieurement Payée")
 
         # --- Boutons d'actions ---
         col_btn1, col_btn2 = st.columns(2)
@@ -185,25 +186,26 @@ if page == "📝 Saisie des Commandes":
                 st.success("Commande enregistrée avec succès dans le système !")
 
         with col_btn2:
-            # GÉNÉRATION D'UN BON DE COMMANDE EXCEL PRO ET STRUCTURÉ
+            # ترتيب جدول ملف الإكسيل الفردي للطباعة بشكل احترافي مع تسمية الأعمدة
             df_items = pd.DataFrame(panier_final)
+            df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
             buffer_invoice = io.BytesIO()
             with pd.ExcelWriter(buffer_invoice, engine='openpyxl') as writer:
-                # 1. Infos client en haut
+                # 1. معلومات العميل والملف في الأعلى
                 df_infos = pd.DataFrame({
                     "PROPRIETE": ["N° Dossier", "Client", "Responsable", "Date"],
                     "VALEUR": [label_fichier, nom_client, responsable_commande, datetime.now().strftime("%Y-%m-%d")]
                 })
                 df_infos.to_excel(writer, sheet_name='Bon de Commande', startrow=1, index=False)
 
-                # 2. Tableau des articles au milieu
+                # 2. تفاصيل جدول السلع في المنتصف
                 df_items.to_excel(writer, sheet_name='Bon de Commande', startrow=8, index=False)
 
-                # 3. Totaux en bas
+                # 3. ملخص الحسابات في الأسفل
                 df_totaux = pd.DataFrame({
-                    "FINANCE": ["TOTAL HT", "TOTAL TTC (x1.2)", "REMISE", "TOTAL NET", "AVANCE", "RESTE A PAYER"],
-                    "MONTANT (DH)": [total_ht, total_ttc, montant_remise, total_net, avance, reste_a_payer]
+                    "FINANCE": ["TOTAL HT", "TOTAL TTC (x1.2)", "REMISE (%)", "TOTAL NET", "AVANCE", "RESTE A PAYER"],
+                    "MONTANT (DH)": [total_ht, total_ttc, f"{remise}%", total_net, avance, reste_a_payer]
                 })
                 df_totaux.to_excel(writer, sheet_name='Bon de Commande', startrow=9 + len(df_items) + 2, index=False)
 
@@ -220,6 +222,3 @@ elif page == "🗂️ Historique & Recherche":
     st.title("🗂️ Base de Données & Historique des Commandes")
 
     if st.session_state["historique_commandes"]:
-        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
-
-        # --- Barre de Recherche Avancée ---
