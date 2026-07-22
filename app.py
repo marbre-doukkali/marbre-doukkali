@@ -184,26 +184,24 @@ if page == "📝 Saisie des Commandes":
 
         with col_btn2:
             df_items = pd.DataFrame(panier_final)
-            df_items.columns = ["Designation", "Materiau", "Dimensions", "Quantite", "Surface (m2)", "Total HT (DH)"]
+            df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # 🛠️ الحل الجذري النهائي لتوليد الإكسيل المندمج بدون أخطاء وبدون حاجة لمكتبات خارجية
-            output = io.BytesIO()
-            df_infos = pd.DataFrame({
-                "INFO_FACTURATION": ["MARBRE DOUKKALI", "N° Dossier", "Client", "Responsable", "Date", "", "TOTAL HT", "TOTAL TTC (x1.2)", "REMISE", "TOTAL NET", "AVANCE", "RESTE A PAYER"],
-                "VALEURS": ["", label_fichier, nom_client, responsable_commande, datetime.now().strftime('%Y-%m-%d'), "", f"{total_ht:.2f} DH", f"{total_ttc:.2f} DH", f"{montant_remise:.2f} DH", f"{total_net:.2f} DH", f"{avance:.2f} DH", f"{reste_a_payer:.2f} DH"]
-            })
+            # حماية النصوص وجعل الجدول يظهر مندمجاً ومنظماً بالكامل كـ جدول حقيقي داخل Excel
+            buffer_excel = io.BytesIO()
+            # استخدام محرك مدمج آمن لا يحتاج مكتبات خارجية
+            csv_data = df_items.to_csv(index=False, sep='\t')
 
-            # دمج البيانات في ملف نصي متوافق كلياً كجدول حقيقي داخل إكسيل تلقائياً
-            buffer_text = "MARBRE DOUKKALI\t\t\t\t\n"
-            buffer_text += f"N° Dossier:\t{label_fichier}\nClient:\t{nom_client}\nResponsable:\t{responsable_commande}\nDate:\t{datetime.now().strftime('%Y-%m-%d')}\n\n"
-            buffer_text += "DETAILS DES ARTICLES\n"
-            buffer_text += df_items.to_csv(index=False, sep='\t')
-            buffer_text += f"\n\nSYNTHESE FINANCIERE\n"
-            buffer_text += f"TOTAL HT:\t{total_ht:.2f} DH\nTOTAL TTC (HT x 1.2):\t{total_ttc:.2f} DH\nREMISE:\t{montant_remise:.2f} DH ({remise}%)\nTOTAL NET A PAYER:\t{total_net:.2f} DH\nAVANCE VERSEE:\t{avance:.2f} DH\nRESTE A PAYER:\t{reste_a_payer:.2f} DH\n"
+            excel_text = "MARBRE DOUKKALI\t\t\t\t\t\n\n"
+            excel_text += f"BON DE COMMANDE - MARBRERIE\n"
+            excel_text += f"N° Dossier:\t{label_fichier}\nClient:\t{nom_client}\nResponsable:\t{responsable_commande}\nDate:\t{datetime.now().strftime('%Y-%m-%d')}\n\n"
+            excel_text += "DETAILS DES ARTICLES\n"
+            excel_text += csv_data
+            excel_text += f"\n\nRECAPITULATIF FINANCIER\n"
+            excel_text += f"TOTAL HT:\t{total_ht:.2f} DH\nTOTAL TTC (HT x 1.2):\t{total_ttc:.2f} DH\nREMISE:\t{montant_remise:.2f} DH ({remise}%)\nTOTAL NET A PAYER:\t{total_net:.2f} DH\nAVANCE VERSEE:\t{avance:.2f} DH\nRESTE A PAYER:\t{reste_a_payer:.2f} DH\n"
 
             st.download_button(
                 label="📥 Imprimer / Télécharger le Bon Excel de cette commande",
-                data=buffer_text.encode('utf-16'),
+                data=excel_text.encode('utf-16'),
                 file_name=f"Bon_Commande_{label_fichier}_{nom_client}.xls",
                 mime="application/vnd.ms-excel"
             )
@@ -212,3 +210,12 @@ if page == "📝 Saisie des Commandes":
 elif page == "🗂️ Historique & Recherche":
     st.title("🗂️ Base de Données & Historique des Commandes")
 
+    if st.session_state["historique_commandes"]:
+        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
+
+        st.header("🔍 Système de Recherche et Filtrage")
+        recherche = st.text_input("Rechercher par Nom de client, N° Dossier ou Responsable :", "")
+
+        if recherche:
+            df_filtre = df_historique[
+                df_historique["Client"].str.contains(recherche, case=False, na=False) |
