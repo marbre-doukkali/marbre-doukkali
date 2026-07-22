@@ -210,7 +210,7 @@ for i, ligne in enumerate(st.session_state["lignes_commande"]):
     prix_m2 = prix_materiaux[materiau]
     surface_totale = longueur * largeur * quantite
     total_ligne = surface_totale * prix_m2
-    total_ht += total_ligne
+    total_ht += total_ligne * 1.2
 
     panier_final.append({
         "designation": designation,
