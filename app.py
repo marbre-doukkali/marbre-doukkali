@@ -1,92 +1,10 @@
 import streamlit as st
 import pandas as pd
+import os
 from datetime import datetime
 
-# 1. Configuration de la page
+# 1. Configuration de la page et sécurité d'accès de base
 st.set_page_config(page_title="Marbrerie - Commandes Privées", page_icon="Ⓜ️", layout="wide")
-
-# Injection CSS avancée : Force un style TABLEAU EXCEL à l'impression et masque les outils Streamlit
-st.markdown("""
-    <style>
-    /* Style visuel à l'écran pour le tableau type Excel */
-    .excel-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-        margin-top: 15px;
-        margin-bottom: 20px;
-    }
-    .excel-table th {
-        background-color: #F2F2F2 !important;
-        color: #000000 !important;
-        border: 1px solid #AAAAAA !important;
-        padding: 10px;
-        text-align: left;
-        font-weight: bold;
-    }
-    .excel-table td {
-        border: 1px solid #CCCCCC !important;
-        padding: 10px;
-        color: #333333;
-    }
-    .excel-table tr:nth-child(even) {
-        background-color: #F9F9F9;
-    }
-    .excel-total-row {
-        font-weight: bold;
-        background-color: #EAEAEA !important;
-    }
-
-    /* Style du bloc Facture / Entête Impression */
-    .facture-header {
-        margin-bottom: 25px;
-        font-family: Arial, sans-serif;
-    }
-
-    /* REGLES STRICTES POUR L'IMPRESSION (Ctrl+P ou Bouton) */
-    @media print {
-        /* Cache absolument tout sauf la zone de facturation */
-        [data-testid="stSidebar"],
-        .stButton,
-        div.row-widget.stRadio,
-        [data-testid="stHeader"],
-        iframe,
-        header,
-        footer,
-        div[data-testid="stForm"],
-        .no-print,
-        .stElementContainer {
-            display: none !important;
-        }
-
-        /* Forcer l'affichage de la zone imprimable */
-        .print-zone {
-            display: block !important;
-        }
-
-        /* Supprime les espacements Streamlit pour l'impression */
-        .main .block-container {
-            padding: 0px !important;
-            margin: 0px !important;
-            max-width: 100% !important;
-        }
-
-        /* Force le quadrillage Excel noir et blanc sur papier */
-        .excel-table th {
-            background-color: #EFEFEF !important;
-            color: #000 !important;
-            border: 1px solid #000000 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        .excel-table td {
-            border: 1px solid #000000 !important;
-            color: #000 !important;
-        }
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 PASSWORD_SECRET = "2017@2026"
 
@@ -116,144 +34,147 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
+# Initialisation de la base de données interne en mémoire pour stocker l'historique
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
-if "compteur_dossier" not in st.session_state:
-    st.session_state["compteur_dossier"] = 1
-
-if "lignes_commande" not in st.session_state:
-    st.session_state["lignes_commande"] = [
-        {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
-    ]
-
-def reinitialiser_nouvelle_commande():
-    st.session_state["compteur_dossier"] += 1
-    st.session_state["lignes_commande"] = [
-        {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
-    ]
-    st.session_state["client_nom_input"] = "Client_Anonyme"
-
+# Nouvelle fonction pour sauvegarder en interne dans l'application (style tableau Excel)
 def sauvegarder_dans_application(panier_items, total_net, avance, reste, client_nom, nom_fichier, responsable):
     date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     for item in panier_items:
         nouvelle_ligne = {
-            "Date Commande": date_actuelle, "N° Dossier": nom_fichier, "Responsable": responsable, "Client": client_nom,
-            "Désignation / Usage": item["designation"], "Matériau": item["materiau"], "Dimensions": item["dimensions"],
-            "Quantité": item["quantite"], "Surface Totale (m2)": item["surface"], "Total Ligne (DH)": item["total"],
-            "Total Net Commande (DH)": total_net, "Avance (DH)": avance, "Reste à Payer (DH)": reste
+            "Date Commande": date_actuelle,
+            "N° Dossier": nom_fichier,
+            "Responsable": responsable,
+            "Client": client_nom,
+            "Désignation / Usage": item["designation"],
+            "Matériau": item["materiau"],
+            "Dimensions": item["dimensions"],
+            "Quantité": item["quantite"],
+            "Surface Totale (m2)": item["surface"],
+            "Total Ligne (DH)": item["total"],
+            "Total Net Commande (DH)": total_net,
+            "Avance (DH)": avance,
+            "Reste à Payer (DH)": reste
         }
         st.session_state["historique_commandes"].append(nouvelle_ligne)
 
 st.title("Ⓜ️ Système de Gestion des Commandes - Marbre & Granit")
 
-# Barre latérale (Masquée à l'impression automatiquement)
-st.sidebar.header("⚙️ Options de Navigation")
 if st.sidebar.button("🔒 Se déconnecter"):
     st.session_state["authentifie"] = False
     st.rerun()
 
-if st.sidebar.button("✨ Créer Nouveau Dossier (Vider Table)", type="primary"):
-    reinitialiser_nouvelle_commande()
-    st.rerun()
+# 3. Initialisation du tableau dynamique d'édition
+if "lignes_commande" not in st.session_state:
+    st.session_state["lignes_commande"] = [
+        {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
+    ]
 
-# Zone de Saisie (Masquée à l'impression)
-st.markdown('<div class="no-print">', unsafe_allow_html=True)
+# --- Informations Dossier et Client ---
 st.header("📂 Informations et Classification du Dossier")
 col_info1, col_info2, col_info3 = st.columns(3)
 
-annee_actuelle = datetime.now().year
-num_dossier_auto = f"DOS-{annee_actuelle}-{st.session_state['compteur_dossier']:03d}"
-
 with col_info1:
-    label_fichier = st.text_input("N° Dossier / Référence (Auto) :", num_dossier_auto)
+    label_fichier = st.text_input("N° Dossier / Référence :", "DOS-2026-001")
 with col_info2:
-    if "client_nom_input" not in st.session_state:
-        st.session_state["client_nom_input"] = "Client_Anonyme"
-    nom_client = st.text_input("Nom du client :", key="client_nom_input")
+    nom_client = st.text_input("Nom du client :", "Client_Anonyme")
 with col_info3:
     responsable_commande = st.text_input("Responsable du suivi (Vendeur) :", "Nadim Jadoui")
 
-st.header("📊 Tableau des Articles de la Commande (Saisie)")
-
-# Gestion de l'ajout d'une ligne de commande brute
-if st.button("➕ Ajouter une ligne d'article"):
-    st.session_state["lignes_commande"].append(
-        {"designation": "Nouveau", "materiau": "marmer", "longueur": 1.00, "largeur": 1.00, "quantite": 1}
-    )
-    st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
+# --- Tableau des articles type Excel ---
+st.header("📊 Tableau des Articles de la Commande")
 
 panier_final = []
-total_brut_global = 0.0
-indices_a_supprimer = []
+total_brut = 0.0
 
-# Saisie dynamique des articles
+# Affichage dynamique des lignes
 for i, ligne in enumerate(st.session_state["lignes_commande"]):
-    st.markdown('<div class="no-print">', unsafe_allow_html=True)
-    c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 1, 1, 1, 0.5])
+    st.markdown(f"**Ligne N° {i+1} :**")
+    c1, c2, c3, c4, c5 = st.columns(5)
 
     with c1:
         designation = st.text_input("Désignation / Usage", value=ligne["designation"], key=f"des_{i}")
     with c2:
-        materiau = st.selectbox("Matériau", list(prix_materiaux.keys()), index=list(prix_materiaux.keys()).index(ligne["materiau"]) if ligne["materiau"] in prix_materiaux else 0, key=f"mat_{i}")
+        materiau = st.selectbox("Matériau", list(prix_materiaux.keys()), index=list(prix_materiaux.keys())+1 if ligne["materiau"] not in prix_materiaux else list(prix_materiaux.keys()).index(ligne["materiau"]), key=f"mat_{i}")
     with c3:
-        longueur = st.number_input("Longueur (m)", min_value=0.01, value=float(ligne["longueur"]), step=0.01, key=f"long_{i}")
+        longueur = st.number_input("Longueur (m)", min_value=0.01, value=ligne["longueur"], step=0.01, key=f"long_{i}")
     with c4:
-        largeur = st.number_input("Largeur (m)", min_value=0.01, value=float(ligne["largeur"]), step=0.01, key=f"larg_{i}")
+        largeur = st.number_input("Largeur (m)", min_value=0.01, value=ligne["largeur"], step=0.01, key=f"larg_{i}")
     with c5:
-        quantite = st.number_input("Qté", min_value=1, value=int(ligne["quantite"]), step=1, key=f"qte_{i}")
-    with c6:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🗑️", key=f"suppr_{i}"):
-            indices_a_supprimer.append(i)
+        quantite = st.number_input("Quantité", min_value=1, value=ligne["quantite"], step=1, key=f"qte_{i}")
 
+    # Mise à jour immédiate dans la session
     st.session_state["lignes_commande"][i] = {
-        "designation": designation, "materiau": materiau, "longueur": longueur, "largeur": largeur, "quantite": quantite
+        "designation": designation,
+        "materiau": materiau,
+        "longueur": longueur,
+        "largeur": largeur,
+        "quantite": quantite
     }
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Calculs hors interface graphique
+    # Calculs de la ligne
     prix_m2 = prix_materiaux[materiau]
     surface_totale = longueur * largeur * quantite
     total_ligne = surface_totale * prix_m2
-    total_brut_global += total_ligne
+    total_brut += total_ligne
 
     panier_final.append({
         "designation": designation,
-        "materiau": materiau.replace("_", " ").title(),
-        "dimensions": f"{longueur:.2f} x {largeur:.2f}",
+        "materiau": materiau.upper(),
+        "dimensions": f"{longueur}x{largeur}",
         "quantite": quantite,
         "surface": surface_totale,
-        "prix_m2": prix_m2,
         "total": total_ligne
     })
 
-# Suppression effective des éléments cochés
-if indices_a_supprimer:
-    for index in sorted(indices_a_supprimer, reverse=True):
-        st.session_state["lignes_commande"].pop(index)
+    st.caption(f"📐 Surface: {surface_totale:.2f} m² | 💰 Total Ligne: {total_ligne:.2f} DH")
+    st.markdown("---")
+
+# --- Bouton Plus (+) pour insérer une nouvelle ligne ---
+if st.button("➕ Ajouter une nouvelle ligne (Style Excel)"):
+    st.session_state["lignes_commande"].append(
+        {"designation": "Nouvel article", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
+    )
     st.rerun()
 
-# Zone financière de saisie (Masquée à l'impression)
-st.markdown('<div class="no-print">', unsafe_allow_html=True)
-st.header("💶 Règlement et Remises")
-col_fin1, col_fin2 = st.columns(2)
-with col_fin1:
-    remise = st.number_input("Remise Commerciale (DH) :", min_value=0.0, value=0.0, step=50.0)
-with col_fin2:
-    avance = st.number_input("Avance versée (DH) :", min_value=0.0, value=0.0, step=100.0)
+# 4. Calculs financiers et validation
+if panier_final:
+    st.subheader(f"TOTAL BRUT : {total_brut:.2f} DH")
 
-total_net = max(0.0, total_brut_global - remise)
-reste_a_payer = max(0.0, total_net - avance)
-st.markdown('</div>', unsafe_allow_html=True)
+    col_finance1, col_finance2 = st.columns(2)
+    with col_finance1:
+        remise = st.number_input("Remise globale (%)", min_value=0.0, max_value=100.0, value=0.0)
+    with col_finance2:
+        avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
 
+    montant_remise = total_brut * (remise / 100)
+    total_net = total_brut - montant_remise
+    reste_a_payer = total_net - avance
 
-# ==============================================================================
-# 3. ZONE IMPRIMABLE (AFFICHAGE DU TABLEAU STYLE EXCEL)
-# ==============================================================================
-st.markdown("---")
-st.subheader("🖨️ Aperçu Avant Impression / Document Officiel")
+    st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
+    st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
 
-# Bouton déclenchant l'impression native du navigateur
+    if reste_a_payer > 0:
+        statut_paiement = f"Reste à payer : {reste_a_payer:.2f} DH (Facture semi-payée)"
+        st.warning(statut_paiement)
+    else:
+        statut_paiement = "Facture Entièrement Payée"
+        st.success(statut_paiement)
+
+    # --- Bouton d'enregistrement interne ---
+    if st.button("💾 Enregistrer la commande dans le tableau de l'application"):
+        sauvegarder_dans_application(
+            panier_final, total_net, avance, reste_a_payer,
+            nom_client, label_fichier, responsable_commande
+        )
+        st.success("Commande enregistrée avec succès dans le tableau historique ci-dessous !")
+
+# --- Affichage du tableau historique interne (Style Excel) ---
+st.header("🗂️ Tableau Historique des Commandes Enregistrées")
+if st.session_state["historique_commandes"]:
+    df_historique = pd.DataFrame(st.session_state["historique_commandes"])
+    st.dataframe(df_historique, use_container_width=True)
+else:
+    st.write("Aucune commande enregistrée pour le moment dans cette session.")
