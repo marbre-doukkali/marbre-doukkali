@@ -149,7 +149,6 @@ if page == "📝 Saisie des Commandes":
     if panier_final:
         st.header("🧮 Synthèse Financière")
 
-        # حـساب الـ TTC بـضرب الـ HT في 1.2
         total_ttc = total_ht * 1.2
 
         col_f1, col_f2 = st.columns(2)
@@ -186,23 +185,18 @@ if page == "📝 Saisie des Commandes":
                 st.success("Commande enregistrée avec succès dans le système !")
 
         with col_btn2:
-            # تنظيم جدول الفاتورة الفردية للإكسيل للطباعة بشكل منسق
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
             buffer_invoice = io.BytesIO()
             with pd.ExcelWriter(buffer_invoice, engine='openpyxl') as writer:
-                # 1. ترويسة الفاتورة
                 df_infos = pd.DataFrame({
                     "BON DE COMMANDE": ["N° Dossier", "Client", "Responsable", "Date"],
                     "MARBRERIE": [label_fichier, nom_client, responsable_commande, datetime.now().strftime("%Y-%m-%d")]
                 })
                 df_infos.to_excel(writer, sheet_name='Facture', startrow=1, index=False)
-
-                # 2. جدول المواد والقياسات
                 df_items.to_excel(writer, sheet_name='Facture', startrow=7, index=False)
 
-                # 3. ملخص الحسابات أسفل الفاتورة
                 df_totaux = pd.DataFrame({
                     "RÉCAPITULATIF FINANCIER": ["TOTAL HT", "TOTAL TTC (HT x 1.2)", "REMISE", "TOTAL NET", "AVANCE VERSEE", "RESTE A PAYER"],
                     "MONTANT (DH)": [f"{total_ht:.2f} DH", f"{total_ttc:.2f} DH", f"{montant_remise:.2f} DH ({remise}%)", f"{total_net:.2f} DH", f"{avance:.2f} DH", f"{reste_a_payer:.2f} DH"]
@@ -219,3 +213,9 @@ if page == "📝 Saisie des Commandes":
 
 # ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
 elif page == "🗂️ Historique & Recherche":
+    st.title("🗂️ Base de Données & Historique des Commandes")
+
+    if st.session_state["historique_commandes"]:
+        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
+
+        # --- Barre de Recherche Avancée ---
