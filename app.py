@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import sqlite3
 from datetime import datetime
 
 # 1. Configuration et Sécurité
@@ -33,9 +34,33 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
-# Initialisation de la mémoire de l'application
-if "historique_commandes" not in st.session_state:
-    st.session_state["historique_commandes"] = []
+# 🛠️ INITIALISATION DU STOCKAGE PERMANENT (SQLite)
+def init_db():
+    conn = sqlite3.connect("marbrerie_data.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS commandes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_commande TEXT,
+            num_dossier TEXT,
+            client TEXT,
+            responsable TEXT,
+            designation TEXT,
+            materiau TEXT,
+            dimensions TEXT,
+            quantite INTEGER,
+            surface REAL,
+            total_ligne REAL,
+            total_ht REAL,
+            total_ttc REAL,
+            avance REAL,
+            reste REAL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
 
 if "lignes_commande" not in st.session_state:
     st.session_state["lignes_commande"] = [
@@ -145,31 +170,23 @@ if page == "📝 Saisie des Commandes":
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
+            # 💾 SAUVEGARDE DIRECTE DANS LE FICHIER DE STOCKAGE (SQLITE)
             if st.button("💾 Enregistrer la commande dans le système"):
                 date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                conn = sqlite3.connect("marbrerie_data.db")
+                cursor = conn.cursor()
                 for item in panier_final:
-                    st.session_state["historique_commandes"].append({
-                        "Date Commande": date_actuelle,
-                        "N° Dossier": label_fichier,
-                        "Client": nom_client,
-                        "Responsable": responsable_commande,
-                        "Désignation": item["Désignation"],
-                        "Matériau": item["Matériau"],
-                        "Dimensions": item["Dimensions"],
-                        "Quantité": item["Quantité"],
-                        "Surface (m2)": item["Surface (m2)"],
-                        "Total Ligne HT (DH)": item["Total HT (DH)"],
-                        "Total HT Commande (DH)": round(total_ht, 2),
-                        "Total TTC (DH)": round(total_ttc, 2),
-                        "Avance (DH)": round(avance, 2),
-                        "Reste (DH)": round(reste_a_payer, 2)
-                    })
-                st.success("Commande enregistrée avec succès !")
+                    cursor.execute("""
+                        INSERT INTO commandes (date_commande, num_dossier, client, responsable, designation, materiau, dimensions, quantite, surface, total_ligne, total_ht, total_ttc, avance, reste)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (date_actuelle, label_fichier, nom_client, responsable_commande, item["Désignation"], item["Matériau"], item["Dimensions"], item["Quantité"], item["Surface (m2)"], item["Total HT (DH)"], total_ht, total_ttc, avance, reste_a_payer))
+                conn.commit()
+                conn.close()
+                st.success("Commande enregistrée avec succès de façon permanente !")
 
         with col_btn2:
             df_items = pd.DataFrame(panier_final)
 
-            # بناء وإكمال كود الـ HTML المغلق تماماً والمحاذى لليسار مع تسطير الحدود تلقائياً
             html_invoice = '<html><head><meta charset="utf-8">'
             html_invoice += '<style>table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left; padding: 6px; font-family: Arial; }</style>'
             html_invoice += '</head><body>'
@@ -177,27 +194,20 @@ if page == "📝 Saisie des Commandes":
             html_invoice += '<h2>BON DE COMMANDE - MARBRERIE</h2>'
             html_invoice += '<table>'
             html_invoice += '<tr style="background-color: #f2f2f2;"><th>PROPRIETE</th><th>VALEUR</th></tr>'
-            html_invoice += '<tr><td><b>N° Dossier</b></td><td>' + str(label_fichier) + '</td></tr>'
-            html_invoice += '<tr><td><b>Client</b></td><td>' + str(nom_client) + '</td></tr>'
-            html_invoice += '<tr><td><b>Responsable</b></td><td>' + str(responsable_commande) + '</td></tr>'
-            html_invoice += '<tr><td><b>Date</b></td><td>' + datetime.now().strftime('%Y-%m-%d') + '</td></tr>'
+            html_invoice += f'<tr><td><b>N° Dossier</b></td><td>{label_fichier}</td></tr>'
+            html_invoice += f'<tr><td><b>Client</b></td><td>{nom_client}</td></tr>'
+            html_invoice += f'<tr><td><b>Responsable</b></td><td>{responsable_commande}</td></tr>'
+            html_invoice += f'<tr><td><b>Date</b></td><td>{datetime.now().strftime("%Y-%m-%d")}</td></tr>'
             html_invoice += '</table><br><h3>DETAILS DES ARTICLES</h3>'
             html_invoice += df_items.to_html(index=False, border=1)
             html_invoice += '<br><h3>RECAPITULATIF FINANCIER</h3>'
             html_invoice += '<table>'
-            html_invoice += '<tr><td><b>TOTAL HT</b></td><td>' + f"{total_ht:.2f}" + ' DH</td></tr>'
-            html_invoice += '<tr><td><b>TOTAL TTC (HT x 1.2)</b></td><td>' + f"{total_ttc:.2f}" + ' DH</td></tr>'
-            html_invoice += '<tr><td><b>REMISE</b></td><td>' + f"{montant_remise:.2f}" + ' DH (' + str(remise) + '%)</td></tr>'
-            html_invoice += '<tr style="background-color: #d9e1f2;"><td><b>TOTAL NET A PAYER</b></td><td><b>' + f"{total_net:.2f}" + ' DH</b></td></tr>'
-            html_invoice += '<tr><td><b>AVANCE VERSEE</b></td><td>' + f"{avance:.2f}" + ' DH</td></tr>'
-            html_invoice += '<tr style="background-color: #fce4d6;"><td><b>RESTE A PAYER</b></td><td><b>' + f"{reste_a_payer:.2f}" + ' DH</b></td></tr>'
+            html_invoice += f'<tr><td><b>TOTAL HT</b></td><td>{total_ht:.2f} DH</td></tr>'
+            html_invoice += f'<tr><td><b>TOTAL TTC (HT x 1.2)</b></td><td>{total_ttc:.2f} DH</td></tr>'
+            html_invoice += f'<tr><td><b>REMISE</b></td><td>{montant_remise:.2f} DH ({remise}%)</td></tr>'
+            html_invoice += f'<tr style="background-color: #d9e1f2;"><td><b>TOTAL NET A PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>'
+            html_invoice += f'<tr><td><b>AVANCE VERSEE</b></td><td>{avance:.2f} DH</td></tr>'
+            html_invoice += f'<tr style="background-color: #fce4d6;"><td><b>RESTE A PAYER</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>'
             html_invoice += '</table></body></html>'
 
             st.download_button(
-                label="📥 Imprimer / Télécharger le Bon Excel",
-                data=html_invoice.encode('utf-8'),
-                file_name=f"Bon_{label_fichier}_{nom_client}.xls",
-                mime="application/vnd.ms-excel"
-            )
-
-# ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
