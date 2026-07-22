@@ -186,9 +186,6 @@ if page == "📝 Saisie des Commandes":
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # حماية النصوص وجعل الجدول يظهر مندمجاً ومنظماً بالكامل كـ جدول حقيقي داخل Excel
-            buffer_excel = io.BytesIO()
-            # استخدام محرك مدمج آمن لا يحتاج مكتبات خارجية
             csv_data = df_items.to_csv(index=False, sep='\t')
 
             excel_text = "MARBRE DOUKKALI\t\t\t\t\t\n\n"
@@ -219,3 +216,7 @@ elif page == "🗂️ Historique & Recherche":
         if recherche:
             df_filtre = df_historique[
                 df_historique["Client"].str.contains(recherche, case=False, na=False) |
+                df_historique["N° Dossier"].str.contains(recherche, case=False, na=False) |
+                df_historique["Responsable"].str.contains(recherche, case=False, na=False)
+            ]
+        else:
