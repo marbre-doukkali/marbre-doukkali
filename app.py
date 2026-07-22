@@ -186,7 +186,7 @@ if page == "📝 Saisie des Commandes":
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # بناء هيكل الفاتورة مع الترويسة العلوية اليسرى MARBRE DOUKKALI بنصوص منفصلة ومحمية
+            # بناء جدول إكسيل آمن ومندمج تماماً بدون استخدام محركات معقدة تسبب مشاكل في الحفظ
             html_invoice = '<html><head><meta charset="utf-8"></head><body>'
             html_invoice += '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr>'
             html_invoice += '<td align="left"><h2>MARBRE DOUKKALI</h2></td>'
