@@ -185,23 +185,18 @@ if page == "📝 Saisie des Commandes":
                 st.success("Commande enregistrée avec succès dans le système !")
 
         with col_btn2:
-            # ترتيب جدول ملف الإكسيل الفردي للطباعة بشكل احترافي مع تسمية الأعمدة بشكل مستقل
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
             buffer_invoice = io.BytesIO()
             with pd.ExcelWriter(buffer_invoice, engine='openpyxl') as writer:
-                # 1. معلومات العميل والملف في الأعلى
                 df_infos = pd.DataFrame({
                     "PROPRIETE": ["N° Dossier", "Client", "Responsable", "Date"],
                     "VALEUR": [label_fichier, nom_client, responsable_commande, datetime.now().strftime("%Y-%m-%d")]
                 })
                 df_infos.to_excel(writer, sheet_name='Bon de Commande', startrow=1, index=False)
-
-                # 2. تفاصيل جدول السلع في المنتصف
                 df_items.to_excel(writer, sheet_name='Bon de Commande', startrow=8, index=False)
 
-                # 3. ملخص الحسابات في الأسفل
                 df_totaux = pd.DataFrame({
                     "FINANCE": ["TOTAL HT", "TOTAL TTC (x1.2)", "REMISE (%)", "TOTAL NET", "AVANCE", "RESTE A PAYER"],
                     "MONTANT (DH)": [total_ht, total_ttc, f"{remise}%", total_net, avance, reste_a_payer]
@@ -221,3 +216,7 @@ elif page == "🗂️ Historique & Recherche":
     st.title("🗂️ Base de Données & Historique des Commandes")
 
     if st.session_state["historique_commandes"]:
+        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
+
+        # --- Barre de Recherche Avancée ---
+        st.header("🔍 Système de Recherche et Filtrage")
