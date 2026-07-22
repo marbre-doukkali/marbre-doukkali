@@ -186,39 +186,35 @@ if page == "📝 Saisie des Commandes":
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # نظام توليد متوافق مع إكسيل دون استخدام أي مكتبة خارجية محجوبة
-            output_data = f"BON DE COMMANDE\n"
-            output_data += f"N° Dossier\t{label_fichier}\nClient\t{nom_client}\nResponsable\t{responsable_commande}\nDate\t{datetime.now().strftime('%Y-%m-%d')}\n\n"
-            output_data += df_items.to_csv(index=False, sep='\t')
-            output_data += f"\n\nRECAPITULATIF FINANCIER\n"
-            output_data += f"TOTAL HT\t{total_ht:.2f} DH\nTOTAL TTC (HT x 1.2)\t{total_ttc:.2f} DH\nREMISE\t{montant_remise:.2f} DH ({remise}%)\nTOTAL NET\t{total_net:.2f} DH\nAVANCE VERSEE\t{avance:.2f} DH\nRESTE A PAYER\t{reste_a_payer:.2f} DH\n"
-
-            st.download_button(
-                label="📥 Imprimer / Télécharger le Bon Excel de cette commande",
-                data=output_data.encode('utf-16'),
-                file_name=f"Bon_Commande_{label_fichier}_{nom_client}.xls",
-                mime="application/vnd.ms-excel"
-            )
-
-# ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
-elif page == "🗂️ Historique & Recherche":
-    st.title("🗂️ Base de Données & Historique des Commandes")
-
-    if st.session_state["historique_commandes"]:
-        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
-
-        st.header("🔍 Système de Recherche et Filtrage")
-        recherche = st.text_input("Rechercher par Nom de client, N° Dossier ou Responsable :", "")
-
-        if recherche:
-            df_filtre = df_historique[
-                df_historique["Client"].str.contains(recherche, case=False, na=False) |
-                df_historique["N° Dossier"].str.contains(recherche, case=False, na=False) |
-                df_historique["Responsable"].str.contains(recherche, case=False, na=False)
-            ]
-        else:
-            df_filtre = df_historique
-
-        st.dataframe(df_filtre, use_container_width=True)
-
-        # تصدير متوافق مدمج ومباشر
+            # تم إضافة عنوان "MARBRE DOUKKALI" أعلى يسار الجدول متوافق مع إكسيل بالكامل
+            html_invoice = f"""
+            <html>
+            <head><meta charset="utf-8"></head>
+            <body>
+                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td align="left"><h2>MARBRE DOUKKALI</h2></td>
+                    </tr>
+                </table>
+                <hr>
+                <h2>BON DE COMMANDE - MARBRERIE</h2>
+                <table border="1" cellspacing="0" cellpadding="5">
+                    <tr style="background-color: #f2f2f2;"><th>PROPRIETE</th><th>VALEUR</th></tr>
+                    <tr><td><b>N° Dossier</b></td><td>{label_fichier}</td></tr>
+                    <tr><td><b>Client</b></td><td>{nom_client}</td></tr>
+                    <tr><td><b>Responsable</b></td><td>{responsable_commande}</td></tr>
+                    <tr><td><b>Date</b></td><td>{datetime.now().strftime('%Y-%m-%d')}</td></tr>
+                </table>
+                <br>
+                <h3>DETAILS DES ARTICLES</h3>
+                {df_items.to_html(index=False, border=1)}
+                <br>
+                <h3>RECAPITULATIF FINANCIER</h3>
+                <table border="1" cellspacing="0" cellpadding="5">
+                    <tr><td><b>TOTAL HT</b></td><td>{total_ht:.2f} DH</td></tr>
+                    <tr><td><b>TOTAL TTC (HT x 1.2)</b></td><td>{total_ttc:.2f} DH</td></tr>
+                    <tr><td><b>REMISE</b></td><td>{montant_remise:.2f} DH ({remise}%)</td></tr>
+                    <tr style="background-color: #d9e1f2;"><td><b>TOTAL NET A PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>
+                    <tr><td><b>AVANCE VERSEE</b></td><td>{avance:.2f} DH</td></tr>
+                    <tr style="background-color: #fce4d6;"><td><b>RESTE A PAYER</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>
+                </table>
