@@ -127,7 +127,6 @@ if page == "📝 Saisie des Commandes":
         total_ligne = surface_totale * prix_m2
         total_ht += total_ligne
 
-        # تصحيح المفاتيح لتتوافق تماماً مع دالة الحفظ ودالة تصدير الإكسيل
         panier_final.append({
             "designation": designation,
             "materiau": materiau.upper(),
@@ -173,7 +172,7 @@ if page == "📝 Saisie des Commandes":
         if reste_a_payer > 0:
             st.warning(f"Reste à payer : {reste_a_payer:.2f} DH (Facture semi-payée)")
         else:
-            st.success("Facture Entérieurement Payée")
+            st.success("Facture Entièrement Payée")
 
         # --- Boutons d'actions ---
         col_btn1, col_btn2 = st.columns(2)
@@ -186,7 +185,7 @@ if page == "📝 Saisie des Commandes":
                 st.success("Commande enregistrée avec succès dans le système !")
 
         with col_btn2:
-            # ترتيب جدول ملف الإكسيل الفردي للطباعة بشكل احترافي مع تسمية الأعمدة
+            # ترتيب جدول ملف الإكسيل الفردي للطباعة بشكل احترافي مع تسمية الأعمدة بشكل مستقل
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
