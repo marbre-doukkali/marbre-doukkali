@@ -1,10 +1,36 @@
 import streamlit as st
 import pandas as pd
-import os
 from datetime import datetime
+import streamlit.components.v1 as components
 
 # 1. Configuration de la page et sécurité d'accès de base
 st.set_page_config(page_title="Marbrerie - Commandes Privées", page_icon="Ⓜ️", layout="wide")
+
+# Injection de code CSS pour optimiser l'impression directe depuis le navigateur
+st.markdown("""
+    <style>
+    @media print {
+        /* Masquer la barre latérale, les boutons et les formulaires de saisie */
+        [data-testid="stSidebar"],
+        .stButton,
+        div.row-widget.stRadio,
+        data-testid="stHeader",
+        iframe,
+        header,
+        .block-container div:has(> .stNumberInput),
+        .block-container div:has(> .stTextInput),
+        div[data-testid="stForm"] {
+            display: none !important;
+        }
+        /* Ajuster le tableau pour qu'il prenne toute la largeur à l'impression */
+        .main .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+            max-width: 100% !important;
+        }
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 PASSWORD_SECRET = "2017@2026"
 
@@ -34,11 +60,20 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
-# Initialisation de la base de données interne en mémoire pour stocker l'historique
+# Initialisation de l'historique et des compteurs
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
-# Nouvelle fonction pour sauvegarder en interne dans l'application (style tableau Excel)
+if "compteur_dossier" not in st.session_state:
+    st.session_state["compteur_dossier"] = 1
+
+def reinitialiser_nouvelle_commande():
+    st.session_state["compteur_dossier"] += 1
+    st.session_state["lignes_commande"] = [
+        {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
+    ]
+    st.session_state["client_nom_input"] = "Client_Anonyme"
+
 def sauvegarder_dans_application(panier_items, total_net, avance, reste, client_nom, nom_fichier, responsable):
     date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -66,80 +101,81 @@ if st.sidebar.button("🔒 Se déconnecter"):
     st.session_state["authentifie"] = False
     st.rerun()
 
-# 3. Initialisation du tableau dynamique d'édition
+if st.sidebar.button("✨ Créer Nouveau Dossier (Vider Table)", type="primary"):
+    reinitialiser_nouvelle_commande()
+    st.rerun()
+
 if "lignes_commande" not in st.session_state:
     st.session_state["lignes_commande"] = [
         {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
     ]
 
-# --- Informations Dossier et Client ---
 st.header("📂 Informations et Classification du Dossier")
 col_info1, col_info2, col_info3 = st.columns(3)
 
+annee_actuelle = datetime.now().year
+num_dossier_auto = f"DOS-{annee_actuelle}-{st.session_state['compteur_dossier']:03d}"
+
 with col_info1:
-    label_fichier = st.text_input("N° Dossier / Référence :", "DOS-2026-001")
+    label_fichier = st.text_input("N° Dossier / Référence (Auto) :", num_dossier_auto)
 with col_info2:
-    nom_client = st.text_input("Nom du client :", "Client_Anonyme")
+    if "client_nom_input" not in st.session_state:
+        st.session_state["client_nom_input"] = "Client_Anonyme"
+    nom_client = st.text_input("Nom du client :", key="client_nom_input")
 with col_info3:
     responsable_commande = st.text_input("Responsable du suivi (Vendeur) :", "Nadim Jadoui")
 
-# --- Tableau des articles type Excel ---
-st.header("📊 Tableau des Articles de la Commande")
+st.header("📊 Tableau des Articles de la Commande (Saisie)")
 
 panier_final = []
 total_brut = 0.0
+indices_a_supprimer = []
 
-# Affichage dynamique des lignes
 for i, ligne in enumerate(st.session_state["lignes_commande"]):
-    st.markdown(f"**Ligne N° {i+1} :**")
-    c1, c2, c3, c4, c5 = st.columns(5)
+    c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 1, 1, 1, 0.5])
 
     with c1:
         designation = st.text_input("Désignation / Usage", value=ligne["designation"], key=f"des_{i}")
     with c2:
-        materiau = st.selectbox("Matériau", list(prix_materiaux.keys()), index=list(prix_materiaux.keys())+1 if ligne["materiau"] not in prix_materiaux else list(prix_materiaux.keys()).index(ligne["materiau"]), key=f"mat_{i}")
+        materiau = st.selectbox("Matériau", list(prix_materiaux.keys()), index=list(prix_materiaux.keys()).index(ligne["materiau"]) if ligne["materiau"] in prix_materiaux else 0, key=f"mat_{i}")
     with c3:
-        longueur = st.number_input("Longueur (m)", min_value=0.01, value=ligne["longueur"], step=0.01, key=f"long_{i}")
+        longueur = st.number_input("Longueur (m)", min_value=0.01, value=float(ligne["longueur"]), step=0.01, key=f"long_{i}")
     with c4:
-        largeur = st.number_input("Largeur (m)", min_value=0.01, value=ligne["largeur"], step=0.01, key=f"larg_{i}")
+        largeur = st.number_input("Largeur (m)", min_value=0.01, value=float(ligne["largeur"]), step=0.01, key=f"larg_{i}")
     with c5:
-        quantite = st.number_input("Quantité", min_value=1, value=ligne["quantite"], step=1, key=f"qte_{i}")
+        quantite = st.number_input("Qté", min_value=1, value=int(ligne["quantite"]), step=1, key=f"qte_{i}")
+    with c6:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🗑️", key=f"suppr_{i}", help="Supprimer cette ligne"):
+            indices_a_supprimer.append(i)
 
-    # Mise à jour immédiate dans la session
     st.session_state["lignes_commande"][i] = {
-        "designation": designation,
-        "materiau": materiau,
-        "longueur": longueur,
-        "largeur": largeur,
-        "quantite": quantite
+        "designation": designation, "materiau": materiau, "longueur": longueur, "largeur": largeur, "quantite": quantite
     }
 
-    # Calculs de la ligne
     prix_m2 = prix_materiaux[materiau]
     surface_totale = longueur * largeur * quantite
     total_ligne = surface_totale * prix_m2
     total_brut += total_ligne
 
     panier_final.append({
-        "designation": designation,
-        "materiau": materiau.upper(),
-        "dimensions": f"{longueur}x{largeur}",
-        "quantite": quantite,
-        "surface": surface_totale,
-        "total": total_ligne
+        "designation": designation, "materiau": materiau.upper(), "dimensions": f"{longueur}x{largeur}", "quantite": quantite, "surface": surface_totale, "total": total_ligne
     })
 
-    st.caption(f"📐 Surface: {surface_totale:.2f} m² | 💰 Total Ligne: {total_ligne:.2f} DH")
+    st.caption(f"📐 Ligne {i+1} : Surface = {surface_totale:.2f} m² | Prix Unit. = {prix_m2} DH | Total Ligne = {total_ligne:.2f} DH")
     st.markdown("---")
 
-# --- Bouton Plus (+) pour insérer une nouvelle ligne ---
+if indices_a_supprimer:
+    for index in sorted(indices_a_supprimer, reverse=True):
+        st.session_state["lignes_commande"].pop(index)
+    st.rerun()
+
 if st.button("➕ Ajouter une nouvelle ligne (Style Excel)"):
     st.session_state["lignes_commande"].append(
         {"designation": "Nouvel article", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
     )
     st.rerun()
 
-# 4. Calculs financiers et validation
 if panier_final:
     st.subheader(f"TOTAL BRUT : {total_brut:.2f} DH")
 
@@ -157,24 +193,44 @@ if panier_final:
     st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
 
     if reste_a_payer > 0:
-        statut_paiement = f"Reste à payer : {reste_a_payer:.2f} DH (Facture semi-payée)"
-        st.warning(statut_paiement)
+        st.warning(f"Reste à payer : {reste_a_payer:.2f} DH (Facture semi-payée)")
     else:
-        statut_paiement = "Facture Entièrement Payée"
-        st.success(statut_paiement)
+        st.success("Facture Entièrement Payée")
 
-    # --- Bouton d'enregistrement interne ---
-    if st.button("💾 Enregistrer la commande dans le tableau de l'application"):
-        sauvegarder_dans_application(
-            panier_final, total_net, avance, reste_a_payer,
-            nom_client, label_fichier, responsable_commande
-        )
-        st.success("Commande enregistrée avec succès dans le tableau historique ci-dessous !")
+    if st.button("💾 Enregistrer la commande dans le tableau de l'application", type="primary"):
+        sauvegarder_dans_application(panier_final, total_net, avance, reste_a_payer, nom_client, label_fichier, responsable_commande)
+        st.success(f"Le dossier {label_fichier} a été enregistré avec succès !")
 
-# --- Affichage du tableau historique interne (Style Excel) ---
+# --- Affichage et Gestion du tableau historique interne ---
 st.header("🗂️ Tableau Historique des Commandes Enregistrées")
+
 if st.session_state["historique_commandes"]:
     df_historique = pd.DataFrame(st.session_state["historique_commandes"])
+
+    col_rech1, col_rech2, col_rech3 = st.columns(3)
+
+    with col_rech1:
+        recherche = st.text_input("🔍 Rechercher un dossier ou un client pour impression / suppression :", "")
+
+    if recherche:
+        df_historique = df_historique[
+            df_historique["N° Dossier"].str.contains(recherche, case=False, na=False) |
+            df_historique["Client"].str.contains(recherche, case=False, na=False)
+        ]
+
+    with col_rech2:
+        dossier_a_supprimer = st.selectbox("🗑️ Sélectionner un dossier à supprimer", ["Aucun"] + list(df_historique["N° Dossier"].unique()))
+        if dossier_a_supprimer != "Aucun":
+            if st.button("Confirmer la suppression du dossier"):
+                st.session_state["historique_commandes"] = [ligne for ligne in st.session_state["historique_commandes"] if ligne["N° Dossier"] != dossier_a_supprimer]
+                st.success(f"Dossier {dossier_a_supprimer} supprimé avec succès.")
+                st.rerun()
+
+    with col_rech3:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🖨️ Imprimer la facture filtrée"):
+            components.html("<script>window.print();</script>", height=0)
+
     st.dataframe(df_historique, use_container_width=True)
 else:
     st.write("Aucune commande enregistrée pour le moment dans cette session.")
