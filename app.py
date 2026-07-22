@@ -78,7 +78,6 @@ if st.sidebar.button("🔒 Se déconnecter"):
 if page == "📝 Saisie des Commandes":
     st.title("📝 Gestion et Création des Commandes")
 
-    # Bouton Nouveau Dossier pour réinitialiser
     if st.button("🆕 Nouveau Dossier (Vider le formulaire)"):
         st.session_state["lignes_commande"] = [
             {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
@@ -101,7 +100,6 @@ if page == "📝 Saisie des Commandes":
     panier_final = []
     total_ht = 0.0
 
-    # Affichage dynamique des lignes
     for i, ligne in enumerate(st.session_state["lignes_commande"]):
         st.markdown(f"**Ligne N° {i+1} :**")
         c1, c2, c3, c4, c5 = st.columns(5)
@@ -189,7 +187,8 @@ if page == "📝 Saisie des Commandes":
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
             buffer_invoice = io.BytesIO()
-            with pd.ExcelWriter(buffer_invoice, engine='openpyxl') as writer:
+            # تعديل المحرك لتفادي الاعتماد على مكتبات خارجية
+            with pd.ExcelWriter(buffer_invoice, engine='xlsxwriter') as writer:
                 df_infos = pd.DataFrame({
                     "BON DE COMMANDE": ["N° Dossier", "Client", "Responsable", "Date"],
                     "MARBRERIE": [label_fichier, nom_client, responsable_commande, datetime.now().strftime("%Y-%m-%d")]
@@ -218,4 +217,4 @@ elif page == "🗂️ Historique & Recherche":
     if st.session_state["historique_commandes"]:
         df_historique = pd.DataFrame(st.session_state["historique_commandes"])
 
-        # --- Barre de Recherche Avancée ---
+        st.header("🔍 Système de Recherche et Filtrage")
