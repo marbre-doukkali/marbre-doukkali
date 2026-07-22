@@ -186,7 +186,7 @@ if page == "📝 Saisie des Commandes":
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # Élimination des f-strings complexes pour détruire définitivement le SyntaxError
+            # بناء هيكل الفاتورة مع الترويسة العلوية اليسرى MARBRE DOUKKALI بنصوص منفصلة ومحمية
             html_invoice = '<html><head><meta charset="utf-8"></head><body>'
             html_invoice += '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr>'
             html_invoice += '<td align="left"><h2>MARBRE DOUKKALI</h2></td>'
