@@ -184,23 +184,31 @@ if page == "📝 Saisie des Commandes":
 
         with col_btn2:
             df_items = pd.DataFrame(panier_final)
-            df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
+            df_items.columns = ["Designation", "Materiau", "Dimensions", "Quantite", "Surface (m2)", "Total HT (DH)"]
 
-            # بناء جدول إكسيل آمن ومندمج تماماً بدون استخدام محركات معقدة تسبب مشاكل في الحفظ
-            html_invoice = '<html><head><meta charset="utf-8"></head><body>'
-            html_invoice += '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr>'
-            html_invoice += '<td align="left"><h2>MARBRE DOUKKALI</h2></td>'
-            html_invoice += '</tr></table><hr><h2>BON DE COMMANDE - MARBRERIE</h2>'
-            html_invoice += '<table border="1" cellspacing="0" cellpadding="5">'
-            html_invoice += '<tr style="background-color: #f2f2f2;"><th>PROPRIETE</th><th>VALEUR</th></tr>'
-            html_invoice += '<tr><td><b>N° Dossier</b></td><td>' + str(label_fichier) + '</td></tr>'
-            html_invoice += '<tr><td><b>Client</b></td><td>' + str(nom_client) + '</td></tr>'
-            html_invoice += '<tr><td><b>Responsable</b></td><td>' + str(responsable_commande) + '</td></tr>'
-            html_invoice += '<tr><td><b>Date</b></td><td>' + datetime.now().strftime('%Y-%m-%d') + '</td></tr></table><br>'
-            html_invoice += '<h3>DETAILS DES ARTICLES</h3>' + df_items.to_html(index=False, border=1) + '<br>'
-            html_invoice += '<h3>RECAPITULATIF FINANCIER</h3><table border="1" cellspacing="0" cellpadding="5">'
-            html_invoice += '<tr><td><b>TOTAL HT</b></td><td>' + f"{total_ht:.2f}" + ' DH</td></tr>'
-            html_invoice += '<tr><td><b>TOTAL TTC (HT x 1.2)</b></td><td>' + f"{total_ttc:.2f}" + ' DH</td></tr>'
-            html_invoice += '<tr><td><b>REMISE</b></td><td>' + f"{montant_remise:.2f}" + ' DH (' + str(remise) + '%)</td></tr>'
-            html_invoice += '<tr style="background-color: #d9e1f2;"><td><b>TOTAL NET A PAYER</b></td><td><b>' + f"{total_net:.2f}" + ' DH</b></td></tr>'
-            html_invoice += '<tr><td><b>AVANCE VERSEE</b></td><td>' + f"{avance:.2f}" + ' DH</td></tr>'
+            # 🛠️ الحل الجذري النهائي لتوليد الإكسيل المندمج بدون أخطاء وبدون حاجة لمكتبات خارجية
+            output = io.BytesIO()
+            df_infos = pd.DataFrame({
+                "INFO_FACTURATION": ["MARBRE DOUKKALI", "N° Dossier", "Client", "Responsable", "Date", "", "TOTAL HT", "TOTAL TTC (x1.2)", "REMISE", "TOTAL NET", "AVANCE", "RESTE A PAYER"],
+                "VALEURS": ["", label_fichier, nom_client, responsable_commande, datetime.now().strftime('%Y-%m-%d'), "", f"{total_ht:.2f} DH", f"{total_ttc:.2f} DH", f"{montant_remise:.2f} DH", f"{total_net:.2f} DH", f"{avance:.2f} DH", f"{reste_a_payer:.2f} DH"]
+            })
+
+            # دمج البيانات في ملف نصي متوافق كلياً كجدول حقيقي داخل إكسيل تلقائياً
+            buffer_text = "MARBRE DOUKKALI\t\t\t\t\n"
+            buffer_text += f"N° Dossier:\t{label_fichier}\nClient:\t{nom_client}\nResponsable:\t{responsable_commande}\nDate:\t{datetime.now().strftime('%Y-%m-%d')}\n\n"
+            buffer_text += "DETAILS DES ARTICLES\n"
+            buffer_text += df_items.to_csv(index=False, sep='\t')
+            buffer_text += f"\n\nSYNTHESE FINANCIERE\n"
+            buffer_text += f"TOTAL HT:\t{total_ht:.2f} DH\nTOTAL TTC (HT x 1.2):\t{total_ttc:.2f} DH\nREMISE:\t{montant_remise:.2f} DH ({remise}%)\nTOTAL NET A PAYER:\t{total_net:.2f} DH\nAVANCE VERSEE:\t{avance:.2f} DH\nRESTE A PAYER:\t{reste_a_payer:.2f} DH\n"
+
+            st.download_button(
+                label="📥 Imprimer / Télécharger le Bon Excel de cette commande",
+                data=buffer_text.encode('utf-16'),
+                file_name=f"Bon_Commande_{label_fichier}_{nom_client}.xls",
+                mime="application/vnd.ms-excel"
+            )
+
+# ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
+elif page == "🗂️ Historique & Recherche":
+    st.title("🗂️ Base de Données & Historique des Commandes")
+
