@@ -22,7 +22,7 @@ if not st.session_state["authentifie"]:
             st.error("Mot de passe incorrect.")
     st.stop()
 
-# 2. Base de données des prix
+# 2. Base de données des prix au m² (DH)
 prix_materiaux = {
     "marmer": 600, "crema_marfil": 650, "carrara": 1100, "calacatta": 1800,
     "statuario": 2200, "nero_marquina": 750, "emperador_fonce": 800, "emperador_clair": 700,
@@ -149,6 +149,7 @@ if page == "📝 Saisie des Commandes":
     if panier_final:
         st.header("🧮 Synthèse Financière")
 
+        # حـساب الـ TTC بـضرب الـ HT في 1.2
         total_ttc = total_ht * 1.2
 
         col_f1, col_f2 = st.columns(2)
@@ -185,38 +186,36 @@ if page == "📝 Saisie des Commandes":
                 st.success("Commande enregistrée avec succès dans le système !")
 
         with col_btn2:
+            # تنظيم جدول الفاتورة الفردية للإكسيل للطباعة بشكل منسق
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
             buffer_invoice = io.BytesIO()
             with pd.ExcelWriter(buffer_invoice, engine='openpyxl') as writer:
+                # 1. ترويسة الفاتورة
                 df_infos = pd.DataFrame({
-                    "PROPRIETE": ["N° Dossier", "Client", "Responsable", "Date"],
-                    "VALEUR": [label_fichier, nom_client, responsable_commande, datetime.now().strftime("%Y-%m-%d")]
+                    "BON DE COMMANDE": ["N° Dossier", "Client", "Responsable", "Date"],
+                    "MARBRERIE": [label_fichier, nom_client, responsable_commande, datetime.now().strftime("%Y-%m-%d")]
                 })
-                df_infos.to_excel(writer, sheet_name='Bon de Commande', startrow=1, index=False)
-                df_items.to_excel(writer, sheet_name='Bon de Commande', startrow=8, index=False)
+                df_infos.to_excel(writer, sheet_name='Facture', startrow=1, index=False)
 
+                # 2. جدول المواد والقياسات
+                df_items.to_excel(writer, sheet_name='Facture', startrow=7, index=False)
+
+                # 3. ملخص الحسابات أسفل الفاتورة
                 df_totaux = pd.DataFrame({
-                    "FINANCE": ["TOTAL HT", "TOTAL TTC (x1.2)", "REMISE (%)", "TOTAL NET", "AVANCE", "RESTE A PAYER"],
-                    "MONTANT (DH)": [total_ht, total_ttc, f"{remise}%", total_net, avance, reste_a_payer]
+                    "RÉCAPITULATIF FINANCIER": ["TOTAL HT", "TOTAL TTC (HT x 1.2)", "REMISE", "TOTAL NET", "AVANCE VERSEE", "RESTE A PAYER"],
+                    "MONTANT (DH)": [f"{total_ht:.2f} DH", f"{total_ttc:.2f} DH", f"{montant_remise:.2f} DH ({remise}%)", f"{total_net:.2f} DH", f"{avance:.2f} DH", f"{reste_a_payer:.2f} DH"]
                 })
-                df_totaux.to_excel(writer, sheet_name='Bon de Commande', startrow=9 + len(df_items) + 2, index=False)
+                df_totaux.to_excel(writer, sheet_name='Facture', startrow=8 + len(df_items) + 2, index=False)
 
             buffer_invoice.seek(0)
             st.download_button(
                 label="📥 Imprimer / Télécharger le Bon Excel de cette commande",
                 data=buffer_invoice,
-                file_name=f"Bon_{label_fichier}_{nom_client}.xlsx",
+                file_name=f"Bon_Commande_{label_fichier}_{nom_client}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
 # ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
 elif page == "🗂️ Historique & Recherche":
-    st.title("🗂️ Base de Données & Historique des Commandes")
-
-    if st.session_state["historique_commandes"]:
-        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
-
-        # --- Barre de Recherche Avancée ---
-        st.header("🔍 Système de Recherche et Filtrage")
