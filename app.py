@@ -213,10 +213,7 @@ elif page == "🗂️ Historique & Recherche":
         st.header("🔍 Système de Recherche et Filtrage")
         recherche = st.text_input("Rechercher par Nom de client, N° Dossier ou Responsable :", "")
 
-        if recherche:
-            df_filtre = df_historique[
-                df_historique["Client"].str.contains(recherche, case=False, na=False) |
-                df_historique["N° Dossier"].str.contains(recherche, case=False, na=False) |
-                df_historique["Responsable"].str.contains(recherche, case=False, na=False)
-            ]
-        else:
+        # 🛠️ التعديل الجذري والآمن: إلغاء شروط الـ if/else المعقدة المسببة للخطأ واختصار التصفية بسطر واحد مباشر ومضمون
+        df_filtre = df_historique[
+            df_historique["Client"].str.contains(recherche, case=False, na=False) |
+            df_historique["N° Dossier"].str.contains(recherche, case=False, na=False) |
