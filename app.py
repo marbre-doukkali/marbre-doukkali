@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
-import io
 from datetime import datetime
 
-# 1. Configuration de la page et sécurité d'accès de base
+# 1. Configuration et Sécurité
 st.set_page_config(page_title="Marbrerie ERP - Commandes", page_icon="Ⓜ️", layout="wide")
 
 PASSWORD_SECRET = "2017@2026"
@@ -34,7 +33,7 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
-# تفعيل التخزين الدائم لضمان عدم اختفاء الملفات عند الانتقال بين الصفحات
+# Initialisation de la mémoire de l'application
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -43,28 +42,7 @@ if "lignes_commande" not in st.session_state:
         {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
     ]
 
-def sauvegarder_dans_application(panier_items, total_ht, total_ttc, avance, reste, client_nom, nom_fichier, responsable):
-    date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    for item in panier_items:
-        nouvelle_ligne = {
-            "Date Commande": date_actuelle,
-            "N° Dossier": nom_fichier,
-            "Responsable": responsable,
-            "Client": client_nom,
-            "Désignation / Usage": item["designation"],
-            "Matériau": item["materiau"],
-            "Dimensions": item["dimensions"],
-            "Quantité": item["quantite"],
-            "Surface Totale (m2)": item["surface"],
-            "Total Ligne HT (DH)": item["total"],
-            "Total HT Commande (DH)": total_ht,
-            "Total TTC (x1.2) (DH)": total_ttc,
-            "Avance (DH)": avance,
-            "Reste à Payer (DH)": reste
-        }
-        st.session_state["historique_commandes"].append(nouvelle_ligne)
-
-# --- NAVIGATION SIDEBAR (Système Multi-pages) ---
+# Navigation
 st.sidebar.title("Ⓜ️ Menu Marbrerie")
 page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche"])
 
@@ -122,18 +100,17 @@ if page == "📝 Saisie des Commandes":
         total_ht += total_ligne
 
         panier_final.append({
-            "designation": designation,
-            "materiau": materiau.upper(),
-            "dimensions": f"{longueur}x{largeur}",
-            "quantite": quantite,
-            "surface": surface_totale,
-            "total": total_ligne
+            "Désignation": designation,
+            "Matériau": materiau.upper(),
+            "Dimensions": f"{longueur}x{largeur}",
+            "Quantité": quantite,
+            "Surface (m2)": round(surface_totale, 2),
+            "Total HT (DH)": round(total_ligne, 2)
         })
-
         st.caption(f"📐 Surface: {surface_totale:.2f} m² | 💰 Total Ligne HT: {total_ligne:.2f} DH")
         st.markdown("---")
 
-    if st.button("➕ Ajouter une nouvelle ligne (Style Excel)"):
+    if st.button("➕ Ajouter une nouvelle ligne"):
         st.session_state["lignes_commande"].append(
             {"designation": "Nouvel article", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
         )
@@ -162,57 +139,68 @@ if page == "📝 Saisie des Commandes":
         st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
 
         if reste_a_payer > 0:
-            st.warning(f"Reste à payer : {reste_a_payer:.2f} DH (Facture semi-payée)")
+            st.warning(f"Reste à payer : {reste_a_payer:.2f} DH")
         else:
             st.success("Facture Entièrement Payée")
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button("💾 Enregistrer la commande dans le système"):
-                sauvegarder_dans_application(
-                    panier_final, total_ht, total_net, avance, reste_a_payer,
-                    nom_client, label_fichier, responsable_commande
-                )
-                st.success("Commande enregistrée avec succès dans le système !")
+                date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                for item in panier_final:
+                    st.session_state["historique_commandes"].append({
+                        "Date Commande": date_actuelle,
+                        "N° Dossier": label_fichier,
+                        "Client": nom_client,
+                        "Responsable": responsable_commande,
+                        "Désignation": item["Désignation"],
+                        "Matériau": item["Matériau"],
+                        "Dimensions": item["Dimensions"],
+                        "Quantité": item["Quantité"],
+                        "Surface (m2)": item["Surface (m2)"],
+                        "Total Ligne HT (DH)": item["Total HT (DH)"],
+                        "Total HT Commande (DH)": round(total_ht, 2),
+                        "Total TTC (DH)": round(total_ttc, 2),
+                        "Avance (DH)": round(avance, 2),
+                        "Reste (DH)": round(reste_a_payer, 2)
+                    })
+                st.success("Commande enregistrée avec succès !")
 
         with col_btn2:
             df_items = pd.DataFrame(panier_final)
-            df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # 🛠️ الحل البرمجي الجذري والنهائي لتوليد ملف إكسيل حقيقي مسطر ومحاذاة لليسار عبر XlsxWriter الأصيل المدمج في بايثون
-            buffer_excel = io.BytesIO()
-            with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
-                workbook = writer.book
-                worksheet = workbook.add_worksheet('Facture')
+            # Format HTML propre interprété par Excel comme un tableau quadrillé et souligné
+            html_invoice = '<html><head><meta charset="utf-8">'
+            html_invoice += '<style>table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left; padding: 6px; font-family: Arial; }</style>'
+            html_invoice += '</head><body>'
+            html_invoice += '<table><tr><td style="border:none; font-size:16px; font-weight:bold; color:#1f4e78;">MARBRE DOUKKALI</td></tr></table><br>'
+            html_invoice += '<h2>BON DE COMMANDE - MARBRERIE</h2>'
+            html_invoice += '<table>'
+            html_invoice += '<tr style="background-color: #f2f2f2;"><th>PROPRIETE</th><th>VALEUR</th></tr>'
+            html_invoice += f'<tr><td><b>N° Dossier</b></td><td>{label_fichier}</td></tr>'
+            html_invoice += f'<tr><td><b>Client</b></td><td>{nom_client}</td></tr>'
+            html_invoice += f'<tr><td><b>Responsable</b></td><td>{responsable_commande}</td></tr>'
+            html_invoice += f'<tr><td><b>Date</b></td><td>{datetime.now().strftime("%Y-%m-%d")}</td></tr>'
+            html_invoice += '</table><br><h3>DETAILS DES ARTICLES</h3>'
+            html_invoice += df_items.to_html(index=False, border=1)
+            html_invoice += '<br><h3>RECAPITULATIF FINANCIER</h3>'
+            html_invoice += '<table>'
+            html_invoice += f'<tr><td><b>TOTAL HT</b></td><td>{total_ht:.2f} DH</td></tr>'
+            html_invoice += f'<tr><td><b>TOTAL TTC (HT x 1.2)</b></td><td>{total_ttc:.2f} DH</td></tr>'
+            html_invoice += f'<tr><td><b>REMISE</b></td><td>{montant_remise:.2f} DH ({remise}%)</td></tr>'
+            html_invoice += f'<tr style="background-color: #d9e1f2;"><td><b>TOTAL NET A PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>'
+            html_invoice += f'<tr><td><b>AVANCE VERSEE</b></td><td>{avance:.2f} DH</td></tr>'
+            html_invoice += f'<tr style="background-color: #fce4d6;"><td><b>RESTE A PAYER</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>'
+            html_invoice += '</table></body></html>'
 
-                # إعداد الأنماط والتسطير والمحاذاة لليسار
-                fmt_logo = workbook.add_format({'font_name': 'Arial', 'font_size': 14, 'bold': True, 'font_color': '#1f4e78', 'align': 'left'})
-                fmt_title = workbook.add_format({'font_name': 'Arial', 'font_size': 12, 'bold': True, 'align': 'left'})
-                fmt_header = workbook.add_format({'font_name': 'Arial', 'bold': True, 'font_color': '#FFFFFF', 'bg_color': '#1f4e78', 'border': 1, 'align': 'left'})
-                fmt_cell = workbook.add_format({'font_name': 'Arial', 'border': 1, 'align': 'left'})
-                fmt_total = workbook.add_format({'font_name': 'Arial', 'bold': True, 'bg_color': '#e2efda', 'border': 1, 'align': 'left'})
+            st.download_button(
+                label="📥 Imprimer / Télécharger le Bon Excel",
+                data=html_invoice.encode('utf-8'),
+                file_name=f"Bon_{label_fichier}_{nom_client}.xls",
+                mime="application/vnd.ms-excel"
+            )
 
-                # كتابة شعار MARBRE DOUKKALI أعلى اليسار
-                worksheet.write('A1', 'MARBRE DOUKKALI', fmt_logo)
-                worksheet.write('A2', 'BON DE COMMANDE - MARBRERIE', fmt_title)
+# ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
+elif page == "🗂️ Historique & Recherche":
+    st.title("🗂️ Base de Données & Historique des Commandes")
 
-                # معلومات العميل
-                infos_client = [
-                    ("N° Dossier:", label_fichier),
-                    ("Client:", nom_client),
-                    ("Responsable:", responsable_commande),
-                    ("Date:", datetime.now().strftime("%Y-%m-%d"))
-                ]
-                row_idx = 4
-                for k, v in infos_client:
-                    worksheet.write(row_idx, 0, k, fmt_cell)
-                    worksheet.write(row_idx, 1, v, fmt_cell)
-                    row_idx += 1
-
-                row_idx += 1
-                # كتابة ترويسة الجدول المسطر
-                for col_num, col_name in enumerate(df_items.columns):
-                    worksheet.write(row_idx, col_num, col_name, fmt_header)
-
-                # كتابة مواد السلع
-                row_idx += 1
