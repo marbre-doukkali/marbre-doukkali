@@ -156,7 +156,7 @@ if "lignes_commande" not in st.session_state:
         {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
     ]
 
-# Zone de Saisie (S'effacera à l'impression)
+# Zone de Saisie Saisie (S'effacera à l'impression)
 st.markdown('<div class="no-print">', unsafe_allow_html=True)
 st.header("📂 Informations et Classification du Dossier")
 col_info1, col_info2, col_info3 = st.columns(3)
@@ -177,7 +177,7 @@ st.header("📊 Tableau des Articles de la Commande (Saisie)")
 st.markdown('</div>', unsafe_allow_html=True)
 
 panier_final = []
-total_ht = 0.0
+total_HT = 0.0
 indices_a_supprimer = []
 
 # Saisie des articles
@@ -210,51 +210,47 @@ for i, ligne in enumerate(st.session_state["lignes_commande"]):
     prix_m2 = prix_materiaux[materiau]
     surface_totale = longueur * largeur * quantite
     total_ligne = surface_totale * prix_m2
-    total_ht += total_ligne * 1.2
+    total_HT += total_ligne * 1.2
 
     panier_final.append({
-        "designation": designation,
-        "materiau": materiau,
-        "dimensions": f"{longueur:.2f} x {largeur:.2f}",
-        "quantite": quantite,
-        "surface": surface_totale,
-        "total": total_ligne
+        "designation": designation, "materiau": materiau.upper(), "dimensions": f"{longueur:.2f} x {largeur:.2f}",
+        "quantite": quantite, "surface": f"{surface_totale:.2f} m²", "prix_unit": f"{prix_m2} DH", "total": f"{total_ligne:.2f} DH"
     })
 
-# Gestion des suppressions de lignes
 if indices_a_supprimer:
     for index in sorted(indices_a_supprimer, reverse=True):
         st.session_state["lignes_commande"].pop(index)
-    if len(st.session_state["lignes_commande"]) == 0:
-        st.session_state["lignes_commande"] = [
-            {"designation": "Escalier", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
-        ]
     st.rerun()
 
-# Zone d'ajout et de calcul financier (Masquée à l'impression)
 st.markdown('<div class="no-print">', unsafe_allow_html=True)
-if st.button("➕ Ajouter une ligne d'article"):
+if st.button("➕ Ajouter une nouvelle ligne (Style Excel)"):
     st.session_state["lignes_commande"].append(
-        {"designation": "Seuil", "materiau": "marmer", "longueur": 1.00, "largeur": 0.20, "quantite": 1}
+        {"designation": "Nouvel article", "materiau": "marmer", "longueur": 1.00, "largeur": 0.30, "quantite": 1}
     )
     st.rerun()
 
-st.header("💰 Règlement et Conditions Financières")
-col_fin1, col_fin2, col_fin3 = st.columns(3)
+col_finance1, col_finance2 = st.columns(2)
+with col_finance1:
+    remise = st.number_input("Remise globale (%)", min_value=0.0, max_value=100.0, value=0.0)
+with col_finance2:
+    avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
 
-with col_fin1:
-    remise = st.number_input("Remise Commerciale Globale (DH) :", min_value=0.0, value=0.0, step=50.0)
-with col_fin2:
-    avance = st.number_input("Acompte / Avance versé (DH) :", min_value=0.0, value=0.0, step=100.0)
+montant_remise = total_HT * (remise / 100)
+total_TTC = total_HT - montant_remise
+reste_a_payer = total_TTC - avance
+st.markdown('</div>', unsafe_allow_html=True)
 
-total_net = max(0.0, total_ht - remise)
-reste_a_payer = max(0.0, total_net - avance)
 
-with col_fin3:
-    st.metric(label="Reste à Payer Dynamique (DH)", value=f"{reste_a_payer:,.2f} DH")
+# ==================== ZONE DOCUMENT PROPRE (STYLE TABLEAU EXCEL) ====================
+if panier_final:
+    st.markdown("---")
 
-# Bouton de sauvegarde locale avant impression
-if st.button("💾 Enregistrer la commande dans l'historique", type="secondary"):
-    sauvegarder_dans_application(panier_final, total_net, avance, reste_a_payer, nom_client, label_fichier, responsable_commande)
-# Bouton déclenchant l'impression native du navigateur
-st.markdown('<button class="btn-print" onclick="window.print()">🖨️ Imprimer la Commande (Format Excel)</button>', unsafe_allow_html=True)
+    # BOUTON IMPRESSION EXCEL NATIF (Ne recharge JAMAIS la page Streamlit)
+    st.markdown('<button class="btn-print" onclick="window.print()">🖨️ Imprimer la Commande (Format Excel)</button>', unsafe_allow_html=True)
+
+    # Construction du tableau HTML pur style Excel pour l'impression brute
+    lignes_tableau_html = ""
+    for idx, item in enumerate(panier_final):
+        lignes_tableau_html += f"""
+        <tr>
+            <td>{idx + 1}</td>
