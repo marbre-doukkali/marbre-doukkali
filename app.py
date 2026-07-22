@@ -246,7 +246,28 @@ if panier_final:
     st.markdown("---")
 
     # BOUTON IMPRESSION EXCEL NATIF (Ne recharge JAMAIS la page Streamlit)
-    st.markdown('<button class="btn-print" onclick="window.print()">🖨️ Imprimer la Commande (Format Excel)</button>', unsafe_allow_html=True)
+    import streamlit as st
+
+st.markdown("""
+<style>
+.btn-print {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.btn-print:hover {
+    background-color: #218838;
+}
+</style>
+
+<button class="btn-print" onclick="window.print()">
+    🖨️ Imprimer la Commande (Format Excel)
+</button>
+""", unsafe_allow_html=True)
 
     # Construction du tableau HTML pur style Excel pour l'impression brute
     lignes_tableau_html = ""
