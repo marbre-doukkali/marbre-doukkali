@@ -186,7 +186,7 @@ if page == "📝 Saisie des Commandes":
             df_items = pd.DataFrame(panier_final)
             df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
 
-            # تم إضافة عنوان "MARBRE DOUKKALI" أعلى يسار الجدول متوافق مع إكسيل بالكامل
+            # بناء هيكل الطباعة مع وضع MARBRE DOUKKALI أقصى اليسار العلوي
             html_invoice = f"""
             <html>
             <head><meta charset="utf-8"></head>
@@ -218,3 +218,4 @@ if page == "📝 Saisie des Commandes":
                     <tr><td><b>AVANCE VERSEE</b></td><td>{avance:.2f} DH</td></tr>
                     <tr style="background-color: #fce4d6;"><td><b>RESTE A PAYER</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>
                 </table>
+            </body>
