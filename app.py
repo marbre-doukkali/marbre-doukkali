@@ -189,7 +189,7 @@ if page == "📝 Saisie des Commandes":
             csv_data = df_items.to_csv(index=False, sep='\t')
 
             excel_text = "MARBRE DOUKKALI\t\t\t\t\t\n\n"
-            excel_text += f"BON DE COMMANDE - MARBRERIE\n"
+            excel_text += "BON DE COMMANDE - MARBRERIE\n"
             excel_text += f"N° Dossier:\t{label_fichier}\nClient:\t{nom_client}\nResponsable:\t{responsable_commande}\nDate:\t{datetime.now().strftime('%Y-%m-%d')}\n\n"
             excel_text += "DETAILS DES ARTICLES\n"
             excel_text += csv_data
