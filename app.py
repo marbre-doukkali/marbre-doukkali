@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import io
 from datetime import datetime
 
 # 1. Configuration et Sécurité de l'application
@@ -33,7 +34,7 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
-# 🛠️ Stockage persistant via le cache d'état global de Streamlit
+# Stockage persistant via le cache d'état global de Streamlit
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -82,12 +83,36 @@ if page == "📝 Saisie des Commandes":
 
     for idx, row in edited_df.iterrows():
         des = str(row.get("Désignation", "Nouvel article"))
-        mat = str(row.get("Matériau", "marmer"))
-        long = float(row.get("Longueur (m)", 1.00))
-        larg = float(row.get("Largeur (m)", 0.30))
-        qte = int(row.get("Quantité", 1))
+        if pd.isna(des) or des.strip() == "":
+            des = "Nouvel article"
 
-        p_m2 = prix_materiaux.get(mat, 600)
+        mat = str(row.get("Matériau", "marmer"))
+        if pd.isna(mat) or mat.strip() == "":
+            mat = "marmer"
+
+        # حماية الأرقام لتفادي كراش ValueError في حالة الخانات الفارغة
+        try:
+            long = float(row.get("Longueur (m)", 1.00))
+            if pd.isna(long) or long <= 0:
+                long = 1.00
+        except:
+            long = 1.00
+
+        try:
+            larg = float(row.get("Largeur (m)", 0.30))
+            if pd.isna(larg) or larg <= 0:
+                larg = 0.30
+        except:
+            larg = 0.30
+
+        try:
+            qte = int(row.get("Quantité", 1))
+            if pd.isna(qte) or qte <= 0:
+                qte = 1
+        except:
+            qte = 1
+
+        p_m2 = prix_materiaux.get(mat.lower().strip(), 600)
         surf = long * larg * qte
         tot_ligne = surf * p_m2
         total_ht += tot_ligne
@@ -115,17 +140,17 @@ if page == "📝 Saisie des Commandes":
     with col_finance2:
         avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
 
-        montant_remise = total_ttc * (remise / 100)
-        total_net = total_ttc - montant_remise
-        reste_a_payer = total_net - avance
+    montant_remise = total_ttc * (remise / 100)
+    total_net = total_ttc - montant_remise
+    reste_a_payer = total_net - avance
 
-        st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
-        st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
+    st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
+    st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
 
-        if reste_a_payer > 0:
-            st.warning(f"Reste à payer : {reste_a_payer:.2f} DH")
-        else:
-            st.success("Facture Entièrement Payée")
+    if reste_a_payer > 0:
+        st.warning(f"Reste à payer : {reste_a_payer:.2f} DH")
+    else:
+        st.success("Facture Entièrement Payée")
 
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
@@ -197,13 +222,3 @@ elif page == "🗂️ Historique & Recherche":
 
         cond_client = df_historique["Client"].str.contains(recherche, case=False, na=False)
         cond_dossier = df_historique["N° Dossier"].str.contains(recherche, case=False, na=False)
-        cond_resp = df_historique["Responsable"].str.contains(recherche, case=False, na=False)
-
-        df_filtre = df_historique[cond_client | cond_dossier | cond_resp]
-
-        st.dataframe(df_filtre, use_container_width=True)
-
-        html_global = '<html><head><meta charset="utf-8">'
-        html_global += '<style>table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left; padding: 6px; font-family: Arial; }</style>'
-        html_global += '</head><body>'
-        html_global += '<table><tr><td style="border:none; font-size:16px; font-weight:bold; color:#1f4e78;">MARBRE DOUKKALI</td></tr></table><br>'
