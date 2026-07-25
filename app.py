@@ -1,6 +1,8 @@
 import streamlit as st
+import streamlit as st
 import pandas as pd
 import io
+import random
 from datetime import datetime
 
 # 1. Configuration et Sécurité de l'application
@@ -34,9 +36,15 @@ prix_materiaux = {
     "labrador_bleu": 1150, "mondariz_fonce": 500, "multicolore": 1400, "rosy": 400
 }
 
+# قائمة المواد المتاحة للاختيار من السهم في الجدول
+liste_options_materiaux = sorted(list(prix_materiaux.keys()))
+
 # Stockage persistant via le cache d'état global de Streamlit
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
+
+if "corbeille_commandes" not in st.session_state:
+    st.session_state["corbeille_commandes"] = []
 
 if "lignes_commande" not in st.session_state:
     st.session_state["lignes_commande"] = [
@@ -45,7 +53,7 @@ if "lignes_commande" not in st.session_state:
 
 # Navigation de l'ERP
 st.sidebar.title("Ⓜ️ Menu Marbrerie")
-page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche"])
+page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche", "🗑️ Corbeille (سلة المهملات)"])
 
 if st.sidebar.button("🔒 Se déconnecter"):
     st.session_state["authentifie"] = False
@@ -74,7 +82,23 @@ if page == "📝 Saisie des Commandes":
     st.header("📊 Tableau des Articles (Style Excel)")
 
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
-    edited_df = st.data_editor(df_form, num_rows="dynamic", use_container_width=True, key="editor_commande")
+
+    # [تحديث] إضافة السهم المنسدلة لاختيار أنواع الرخام والجرانيت تلقائياً من العمود
+    edited_df = st.data_editor(
+        df_form,
+        num_rows="dynamic",
+        use_container_width=True,
+        key="editor_commande",
+        column_config={
+            "Matériau": st.column_config.SelectboxColumn(
+                "Matériau",
+                help="Sélectionnez le type de marbre ou granite",
+                width="medium",
+                options=liste_options_materiaux,
+                required=True,
+            )
+        }
+    )
 
     st.session_state["lignes_commande"] = edited_df.to_dict(orient="records")
 
@@ -90,7 +114,6 @@ if page == "📝 Saisie des Commandes":
         if pd.isna(mat) or mat.strip() == "":
             mat = "marmer"
 
-        # حماية الأرقام لتفادي كراش ValueError في حالة الخانات الفارغة
         try:
             long = float(row.get("Longueur (m)", 1.00))
             if pd.isna(long) or long <= 0:
@@ -156,8 +179,11 @@ if page == "📝 Saisie des Commandes":
     with col_btn1:
         if st.button("💾 Enregistrer la commande dans le système"):
             date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # [تعديل التسجيل] إنشاء كود موحد (ID Unique) لكل طلبية لضمان عدم تداخل الأسطر عند الحذف والبحث
+            id_commande = f"CMD-{random.randint(10000, 99999)}"
             for item in panier_final:
                 st.session_state["historique_commandes"].append({
+                    "ID unique": id_commande,
                     "Date Commande": date_actuelle,
                     "N° Dossier": label_fichier,
                     "Client": nom_client,
@@ -195,30 +221,18 @@ if page == "📝 Saisie des Commandes":
             html_invoice += df_items.to_html(index=False, border=1)
             html_invoice += '<br><h3>RECAPITULATIF FINANCIER</h3>'
             html_invoice += '<table>'
+
             html_invoice += f'<tr><td><b>TOTAL HT</b></td><td>{total_ht:.2f} DH</td></tr>'
-            html_invoice += f'<tr><td><b>TOTAL TTC (HT x 1.2)</b></td><td>{total_ttc:.2f} DH</td></tr>'
-            html_invoice += f'<tr><td><b>REMISE</b></td><td>{montant_remise:.2f} DH ({remise}%)</td></tr>'
-            html_invoice += f'<tr style="background-color: #d9e1f2;"><td><b>TOTAL NET A PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>'
-            html_invoice += f'<tr><td><b>AVANCE VERSEE</b></td><td>{avance:.2f} DH</td></tr>'
-            html_invoice += f'<tr style="background-color: #fce4d6;"><td><b>RESTE A PAYER</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>'
+            html_invoice += f'<tr><td><b>TOTAL TTC</b></td><td>{total_ttc:.2f} DH</td></tr>'
+            if remise > 0:
+                html_invoice += f'<tr><td><b>Remise ({remise}%)</b></td><td>{montant_remise:.2f} DH</td></tr>'
+            html_invoice += f'<tr style="background-color: #e2efda;"><td><b>TOTAL NET À PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>'
+            html_invoice += f'<tr><td><b>Avance Versée</b></td><td>{avance:.2f} DH</td></tr>'
+            html_invoice += f'<tr style="background-color: #fce4d6;"><td><b>Reste à Payer</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>'
             html_invoice += '</table></body></html>'
 
+            buffer = io.BytesIO()
+            buffer.write(html_invoice.encode('utf-8'))
+            buffer.seek(0)
+
             st.download_button(
-                label="📥 Imprimer / Télécharger le Bon Excel",
-                data=html_invoice.encode('utf-8'),
-                file_name=f"Bon_{label_fichier}_{nom_client}.xls",
-                mime="application/vnd.ms-excel"
-            )
-
-# ================= PAGE 2 : HISTORIQUE ET RECHERCHE =================
-elif page == "🗂️ Historique & Recherche":
-    st.title("🗂️ Base de Données & Historique des Commandes")
-
-    if st.session_state["historique_commandes"]:
-        df_historique = pd.DataFrame(st.session_state["historique_commandes"])
-
-        st.header("🔍 Système de Recherche")
-        recherche = st.text_input("Rechercher par Nom, N° Dossier ou Responsable :", "")
-
-        cond_client = df_historique["Client"].str.contains(recherche, case=False, na=False)
-        cond_dossier = df_historique["N° Dossier"].str.contains(recherche, case=False, na=False)
