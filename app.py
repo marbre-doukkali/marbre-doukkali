@@ -36,10 +36,9 @@ prix_materiaux = {
 }
 
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
-
-# قائمة المسؤولين والباعة بالورشة (يمكنك تعديلها أو الإضافة عليها بيدك)
 liste_responsables = ["الطوسي (El Tossi)", "Nadim Jadoui", "Responsable Standard"]
 
+# إعداد الذاكرة الدائمة وضمان حماية سلة المهملات والأرشيف من الضياع
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -77,12 +76,12 @@ if page == "📝 Saisie des Commandes":
     with col_info2:
         nom_client = st.text_input("Nom du client :", "Client_Anonyme")
     with col_info3:
-        # [تحديث] تغيير خانة المسؤول لتصبح قائمة منسدلة (سهم) تحتوي على اسم الطوسي جاهزاً للضبط والاختيار
         responsable_commande = st.selectbox("Responsable du suivi (Vendeur) :", liste_responsables, index=0)
 
     st.header("📊 Tableau des Articles (Style Excel)")
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
 
+    # تحرير الجدول وحفظ البيانات بشكل آمن في الذاكرة الحية
     edited_df = st.data_editor(
         df_form,
         num_rows="dynamic",
@@ -91,14 +90,13 @@ if page == "📝 Saisie des Commandes":
         column_config={
             "Matériau": st.column_config.SelectboxColumn(
                 "Matériau",
-                help="Sélectionnez le type de marbre ou granite",
-                width="medium",
                 options=liste_options_materiaux,
                 required=True
             )
         }
     )
 
+    # تفعيل المزامنة المباشرة لمنع فقدان البيانات المدخلة قبل ضغط الأزرار
     st.session_state["lignes_commande"] = edited_df.to_dict(orient="records")
 
     panier_final = []
@@ -173,7 +171,7 @@ if page == "📝 Saisie des Commandes":
                     "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
                     "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
                 })
-            st.success(f"Commande de {nom_client} suivie par {responsable_commande} enregistrée avec succès !")
+            st.success("La commande a été enregistrée avec succès في الأرشيف !")
 
     with col_btn2:
         if panier_final:
@@ -210,12 +208,15 @@ if page == "📝 Saisie des Commandes":
                 mime="text/html", use_container_width=True
             )
 
-# ================= PAGE 2 : HISTORIQUE & RECHERCHE =================
+# ================= PAGE 2 : HISTORIQUE & RECHERCHE (نظام المجلدات المعدل) =================
 elif page == "🗂️ Historique & Recherche":
-    st.title("🗂️ Historique & Recherche des Commandes")
+    st.title("🗂️ Historique & Recherche (Système de Dossiers)")
 
     if not st.session_state["historique_commandes"]:
         st.info("Aucune commande n'est encore enregistrée dans le système.")
     else:
         df_hist = pd.DataFrame(st.session_state["historique_commandes"])
+
+        st.markdown("### 📂 Choisissez un dossier (إختر مجلد المسؤول):")
+        list_dossiers_resp = sorted(list(df_hist['Responsable'].unique()))
 
