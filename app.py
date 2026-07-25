@@ -293,8 +293,33 @@ elif page == NOM_PAGE_ARCHIVE:
             df_filtered = df_hist
 
         df_affichage = df_filtered[["N° Dossier"]].rename(columns={"N° Dossier": "رقم الملف"})
-        st.dataframe(df_affichage, use_container_width=True, hide_index=True)
+        st.dataframe(df_affichage, use_container_width=True, hide_index=True, height=220)
         st.caption(f"📁 عدد الملفات المطابقة : {len(df_affichage)}")
+
+        st.markdown("##### 🗑️ حذف سريع (نقل مباشر إلى سلة المهملات) بدون فتح التفاصيل:")
+        col_del1, col_del2 = st.columns([3, 1])
+        with col_del1:
+            dossiers_a_supprimer = st.multiselect(
+                "اختر ملفاً أو عدة ملفات لحذفها :",
+                df_affichage["رقم الملف"].tolist(),
+                key="multiselect_suppression_rapide"
+            )
+        with col_del2:
+            st.write("")
+            if st.button("🗑️ حذف المحدد"):
+                if dossiers_a_supprimer:
+                    for num_dossier in dossiers_a_supprimer:
+                        cmd_a_suppr = next(
+                            (item for item in st.session_state["historique_commandes"] if item["N° Dossier"] == num_dossier),
+                            None
+                        )
+                        if cmd_a_suppr:
+                            st.session_state["corbeille_commandes"].append(cmd_a_suppr.copy())
+                            st.session_state["historique_commandes"].remove(cmd_a_suppr)
+                    st.success(f"تم نقل {len(dossiers_a_supprimer)} ملف(ات) إلى سلة المهملات! ✅")
+                    st.rerun()
+                else:
+                    st.warning("الرجاء اختيار ملف واحد على الأقل قبل الحذف.")
 
         st.markdown("### 🖨️ فحص تفاصيل القياسات للملف المحدد وتوليد مستند الـ Excel")
         liste_fichiers_dispo = df_filtered["N° Dossier"].unique()
@@ -312,7 +337,7 @@ elif page == NOM_PAGE_ARCHIVE:
             if cmd_info:
                 st.markdown(f"📄 كشف قياسات وسلع الرخام التابع للملف المحدد: **{fichier_selectionne}**")
                 df_details_cmd = pd.DataFrame(cmd_info["Details"])
-                st.dataframe(df_details_cmd, use_container_width=True)
+                st.dataframe(df_details_cmd, use_container_width=True, height=220)
 
                 # Choix automatique du moteur Excel disponible + capture de toute erreur d'exécution
                 buffer = None
@@ -376,7 +401,7 @@ elif page == "🗑️ سلة المهملات (Corbeille)":
         st.info("سلة المهملات فارغة ومستقرة تماماً حالياً.")
     else:
         df_corbeille = pd.DataFrame(st.session_state["corbeille_commandes"])
-        st.dataframe(df_corbeille.drop(columns=["Details"], errors="ignore"), use_container_width=True)
+        st.dataframe(df_corbeille.drop(columns=["Details"], errors="ignore"), use_container_width=True, height=250)
 
         st.markdown("---")
         col_action_corbeille1, col_action_corbeille2 = st.columns(2)
