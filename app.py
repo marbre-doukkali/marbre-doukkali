@@ -37,6 +37,7 @@ prix_materiaux = {
 
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 
+# تفعيل مخازن البيانات الدائمة لحماية الملفات وسلة المهملات
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -102,30 +103,22 @@ if page == "📝 Saisie des Commandes":
 
     for idx, row in edited_df.iterrows():
         des = str(row.get("Désignation", "Nouvel article")).strip()
-        if des == "" or pd.isna(row.get("Désignation")):
-            des = "Nouvel article"
-
+        if des == "" or pd.isna(row.get("Désignation")): des = "Nouvel article"
         mat = str(row.get("Matériau", "marmer")).strip()
-        if mat == "" or pd.isna(row.get("Matériau")):
-            mat = "marmer"
+        if mat == "" or pd.isna(row.get("Matériau")): mat = "marmer"
 
         try:
             long = float(row.get("Longueur (m)", 1.00))
             if long <= 0 or pd.isna(long): long = 1.00
-        except:
-            long = 1.00
-
+        except: long = 1.00
         try:
             larg = float(row.get("Largeur (m)", 0.30))
             if larg <= 0 or pd.isna(larg): larg = 0.30
-        except:
-            larg = 0.30
-
+        except: larg = 0.30
         try:
             qte = int(row.get("Quantité", 1))
             if qte <= 0 or pd.isna(qte): qte = 1
-        except:
-            qte = 1
+        except: qte = 1
 
         p_m2 = prix_materiaux.get(mat.lower(), 600)
         surf = long * larg * qte
@@ -133,12 +126,8 @@ if page == "📝 Saisie des Commandes":
         total_ht += tot_ligne
 
         panier_final.append({
-            "designation": des,
-            "materiau": mat.upper(),
-            "dimensions": f"{long}x{larg}",
-            "quantite": qte,
-            "surface": round(surf, 2),
-            "total": round(tot_ligne, 2)
+            "designation": des, "materiau": mat.upper(), "dimensions": f"{long}x{larg}",
+            "quantite": qte, "surface": round(surf, 2), "total": round(tot_ligne, 2)
         })
 
     st.header("🧮 Synthèse Financière")
@@ -174,21 +163,12 @@ if page == "📝 Saisie des Commandes":
             id_commande = f"CMD-{random.randint(10000, 99999)}"
             for item in panier_final:
                 st.session_state["historique_commandes"].append({
-                    "ID unique": id_commande,
-                    "Date Commande": date_actuelle,
-                    "N° Dossier": label_fichier,
-                    "Client": nom_client,
-                    "Responsable": responsable_commande,
-                    "Désignation": item["designation"],
-                    "Matériau": item["materiau"],
-                    "Dimensions": item["dimensions"],
-                    "Quantité": item["quantite"],
-                    "Surface (m2)": item["surface"],
-                    "Total Ligne HT (DH)": item["total"],
-                    "Total HT Commande (DH)": round(total_ht, 2),
-                    "Total TTC (DH)": round(total_net, 2),
-                    "Avance (DH)": round(avance, 2),
-                    "Reste (DH)": round(reste_a_payer, 2)
+                    "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": label_fichier,
+                    "Client": nom_client, "Responsable": responsable_commande, "Désignation": item["designation"],
+                    "Matériau": item["materiau"], "Dimensions": item["dimensions"], "Quantité": item["quantite"],
+                    "Surface (m2)": item["surface"], "Total Ligne HT (DH)": item["total"],
+                    "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
+                    "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
                 })
             st.success("Commande enregistrée avec succès dans l'historique !")
 
@@ -203,10 +183,10 @@ if page == "📝 Saisie des Commandes":
             html_invoice += '<table><tr><td style="border:none; font-size:16px; font-weight:bold; color:#1f4e78;">MARBRE DOUKKALI</td></tr></table><br>'
             html_invoice += '<h2>BON DE COMMANDE - MARBRERIE</h2>'
             html_invoice += '<table>'
-            html_invoice += '<tr><td><b>N° Dossier</b></td><td>' + str(label_fichier) + '</td></tr>'
-            html_invoice += '<tr><td><b>Client</b></td><td>' + str(nom_client) + '</td></tr>'
-            html_invoice += '<tr><td><b>Responsable</b></td><td>' + str(responsable_commande) + '</td></tr>'
-            html_invoice += '<tr><td><b>Date</b></td><td>' + datetime.now().strftime("%Y-%m-%d") + '</td></tr>'
+            html_invoice += f'<tr><td><b>N° Dossier</b></td><td>{label_fichier}</td></tr>'
+            html_invoice += f'<tr><td><b>Client</b></td><td>{nom_client}</td></tr>'
+            html_invoice += f'<tr><td><b>Responsable</b></td><td>{responsable_commande}</td></tr>'
+            html_invoice += f'<tr><td><b>Date</b></td><td>{datetime.now().strftime("%Y-%m-%d")}</td></tr>'
             html_invoice += '</table><br><h3>DETAILS DES ARTICLES</h3>'
             html_invoice += df_items.to_html(index=False, border=1)
             html_invoice += '<br><h3>RECAPITULATIF FINANCIER</h3><table>'
@@ -223,10 +203,8 @@ if page == "📝 Saisie des Commandes":
 
             st.download_button(
                 label="🖨️ Télécharger le Bon de Commande (HTML)",
-                data=buffer,
-                file_name=f"Bon_Commande_{label_fichier}.html",
-                mime="text/html",
-                use_container_width=True
+                data=buffer, file_name=f"Bon_Commande_{label_fichier}.html",
+                mime="text/html", use_container_width=True
             )
 
 # ================= PAGE 2 : HISTORIQUE & RECHERCHE =================
@@ -238,3 +216,7 @@ elif page == "🗂️ Historique & Recherche":
     else:
         df_hist = pd.DataFrame(st.session_state["historique_commandes"])
 
+        # [إصلاح محرك البحث] تم إعداده ليعمل بدون الحاجة لتحديث الصفحة تكراراً
+        recherche = st.text_input("🔍 Rechercher par N° Dossier, Client ou Matériau :", key="search_bar_input")
+        if recherche:
+            df_filtered = df_hist[
