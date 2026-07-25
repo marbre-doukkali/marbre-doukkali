@@ -11,7 +11,7 @@ try:
 except ImportError:
     XGB_AVAILABLE = False
 
-# 1. إعداد الصفحة وتخصيص المظهر الصناعي لشركة رخام دكالة
+# 1. Configuration et Sécurité de l'application
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
 # تخصيص الـ CSS وتصميم حرف M كبير ومزخرف بألوان وعروق الرخام الطبيعي
@@ -54,14 +54,6 @@ st.markdown("""
     font-size: 65px;
 }
 
-.industrial-title {
-    font-size: 30px;
-    font-weight: bold;
-    color: #ffffff;
-    text-align: center;
-    margin-top: 15px;
-    text-shadow: 2px 2px 4px #000000;
-}
 h1, h2, h3 {
     color: #ffffff !important;
     text-shadow: 1px 1px 3px #000000;
@@ -112,7 +104,7 @@ if "corbeille_commandes" not in st.session_state:
 
 if "lignes_commande" not in st.session_state:
     st.session_state["lignes_commande"] = [
-        {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
+        {"Désignation": "Escalier (درج)", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
     ]
 
 # شفرة HTML نقية لرسم وتجسيد حرف M الرخامي الفخم
@@ -125,17 +117,17 @@ html_m_rendering = """
 # بوابة حماية الدخول بحرف M الرخامي الكبير الفخم
 if not st.session_state["authentifie"]:
     st.markdown(html_m_rendering, unsafe_allow_html=True)
-    st.markdown("<div class='industrial-title'>مرحباً بك في نظام إدارة ومبيعات رخام دكالة</div>", unsafe_allow_html=True)
-    mot_de_passe = st.text_input("أدخل الرقم السري الخاص بالفريق المعني :", type="password")
-    if st.button("تسجيل الدخول للنظام الآمن"):
+    st.markdown("<div style='font-size: 30px; font-weight: bold; color: #ffffff; text-align: center; margin-top: 15px; text-shadow: 2px 2px 4px #000000;'>مرحباً بك في نظام إدارة ومبيعات رخام دكالة</div>", unsafe_allow_html=True)
+    mot_de_passe = st.text_input("Entrez le mot de passe de l'équipe :", type="password")
+    if st.button("Se connecter"):
         if mot_de_passe == PASSWORD_SECRET:
             st.session_state["authentifie"] = True
             st.rerun()
         else:
-            st.error("الرقم السري غير صحيح.")
+            st.error("Mot de passe incorrect.")
     st.stop()
 
-# 2. قاعدة بيانات تسعير المواد الخام والجرانيت للمتر المربع (DH)
+# 2. Base de données des prix au m² (DH)
 prix_materiaux = {
     "marmer": 600, "crema_marfil": 650, "carrara": 1100, "calacatta": 1800,
     "statuario": 2200, "nero_marquina": 750, "emperador_fonce": 800, "emperador_clair": 700,
@@ -148,24 +140,34 @@ prix_materiaux = {
 }
 
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
+
+# القائمة المطلوبة مدمجة بالكامل بالترجمة العربية بين قوسين لعمود البيان الحاسم
+liste_designations_prefere = [
+    "Escalier (درج)",
+    "Plan de cuisine (مطبخ)",
+    "Revêtement de sol (أرضية)",
+    "Plinthe (حزام)",
+    "Seuil de porte (عتبة)",
+    "Autre (كتابة مخصصة)"
+]
 liste_responsables = ["الطوسي (El Tossi)", "Nadim Jadoui", "Responsable Standard"]
 
 # قائمة الانتقال الجانبية تشتمل على حرف M الرخامي بحجم متناسق ومصغر
 st.sidebar.markdown("<div class='industrial-marble-m' style='padding:10px; margin-bottom:10px;'><div class='luxury-marble-text luxury-marble-text-sidebar'>M</div></div>", unsafe_allow_html=True)
-st.sidebar.markdown("<h3 style='text-align: center; color: #ffffff; margin-top:0;'>نظام مبيعات دكالة</h3>", unsafe_allow_html=True)
+st.sidebar.title("Ⓜ️ Menu Marbrerie")
 page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche", "🗑️ Corbeille (سلة المهملات)"])
 
 if st.sidebar.button("🔒 Se déconnecter"):
     st.session_state["authentifie"] = False
     st.rerun()
 
-# ================= القسم 1 : تسجيل ومتابعة الطلبيات والتركيبات المطور =================
+# ================= PAGE 1 : SAISIE DES COMMANDES =================
 if page == "📝 Saisie des Commandes":
-    st.title("📝 Gestion et Creation des Commandes")
+    st.title("📝 Gestion et Création des Commandes")
 
     if st.button("🆕 Nouveau Dossier (Vider le formulaire)"):
         st.session_state["lignes_commande"] = [
-            {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
+            {"Désignation": "Escalier (درج)", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
         ]
         st.rerun()
 
@@ -173,9 +175,9 @@ if page == "📝 Saisie des Commandes":
     col_info1, col_info2, col_info3 = st.columns(3)
 
     with col_info1:
-        label_fichier = st.text_input("N° Dossier / Reference :", "DOS-2026-001")
+        label_fichier = st.text_input("N° Dossier / Référence :", "DOS-2026-001")
     with col_info2:
-        nom_client = st.text_input("Nom du client :", "Client_Anonyme")
+        nom_client = st.text_input("Nom du client :", "Client_Anonymه")
     with col_info3:
         responsable_commande = st.selectbox("Responsable du suivi (Vendeur) :", liste_responsables, index=0)
 
@@ -183,12 +185,18 @@ if page == "📝 Saisie des Commandes":
 
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
 
+    # دمج تصفية الاختيارات ثنائية اللغة لعمود الـ Désignation داخل جدول التعديل السريع
     edited_df = st.data_editor(
         df_form,
         num_rows="dynamic",
         use_container_width=True,
         key="editor_commande_unique_key",
         column_config={
+            "Désignation": st.column_config.SelectboxColumn(
+                "Désignation",
+                options=liste_designations_prefere,
+                required=True
+            ),
             "Matériau": st.column_config.SelectboxColumn(
                 "Matériau",
                 options=liste_options_materiaux,
@@ -201,8 +209,8 @@ if page == "📝 Saisie des Commandes":
     total_ht = 0.0
 
     for idx, row in edited_df.iterrows():
-        des = str(row.get("Désignation", "Nouvel article")).strip()
-        if des == "" or pd.isna(row.get("Désignation")): des = "Nouvel article"
+        des = str(row.get("Désignation", "Escalier (درج)")).strip()
+        if des == "" or pd.isna(row.get("Désignation")): des = "Escalier (درج)"
         mat = str(row.get("Matériau", "marmer")).strip()
         if mat == "" or pd.isna(row.get("Matériau")): mat = "marmer"
 
@@ -229,20 +237,19 @@ if page == "📝 Saisie des Commandes":
             "Quantité": qte, "Surface (m2)": round(surf, 2), "Total HT (DH)": round(tot_ligne, 2)
         })
 
-    st.header("🧮 Synthese Financiere")
+    st.header("🧮 Synthèse Financière")
     total_ttc = total_ht * 1.2
 
     col_finance1, col_finance2 = st.columns(2)
     with col_finance1:
         remise = st.number_input("Remise globale (%)", min_value=0.0, max_value=100.0, value=0.0)
     with col_finance2:
-        avance = st.number_input("Somme d'avance versee (DH)", min_value=0.0, value=0.0)
+        avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
 
     montant_remise = total_ttc * (remise / 100)
     total_net = total_ttc - montant_remise
     reste_a_payer = total_net - avance
 
-    # بناء القالب بأمان تام وفصل الرموز الخاصة المسببة للمشاكل
     panel_html = "<div class='marble-panel'>"
     panel_html += "<h3 style='color:#0f172a !important; border-bottom:2px solid #0f172a;'>🧾 الملخص المالي والتركيب الفني</h3>"
     panel_html += f"<p>💰 TOTAL HT : <b>{total_ht:,.2f} DH</b></p>"
@@ -256,11 +263,5 @@ if page == "📝 Saisie des Commandes":
     st.markdown(panel_html, unsafe_allow_html=True)
 
     if reste_a_payer <= 0:
-        st.success("Facture Entierement Payee")
-
-    col_btn1, col_btn2 = st.columns(2)
-    with col_btn1:
-        if st.button("💾 Enregistrer la commande dans le système"):
-            date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M")
-            id_commande = f"CMD-{random.randint(10000, 99999)}"
+        st.success("Facture Entièrement Payée")
 
