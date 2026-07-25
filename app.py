@@ -48,6 +48,7 @@ if "lignes_commande" not in st.session_state:
         {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
     ]
 
+# القائمة الجانبية للتنقل
 st.sidebar.title("Ⓜ️ Menu Marbrerie")
 page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche", "🗑️ Corbeille (سلة المهملات)"])
 
@@ -78,6 +79,7 @@ if page == "📝 Saisie des Commandes":
     st.header("📊 Tableau des Articles (Style Excel)")
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
 
+    # اختيار المواد عبر قائمة منسدلة (سهم) داخل الجدول مباشرة
     edited_df = st.data_editor(
         df_form,
         num_rows="dynamic",
@@ -86,8 +88,6 @@ if page == "📝 Saisie des Commandes":
         column_config={
             "Matériau": st.column_config.SelectboxColumn(
                 "Matériau",
-                help="Sélectionnez le type de marbre ou granite",
-                width="medium",
                 options=liste_options_materiaux,
                 required=True
             )
@@ -100,36 +100,31 @@ if page == "📝 Saisie des Commandes":
     total_ht = 0.0
 
     for idx, row in edited_df.iterrows():
-        des = str(row.get("Désignation", "Nouvel article"))
-        if pd.isna(des) or des.strip() == "":
-            des = "Nouvel article"
+        des = str(row.get("Désignation", "Nouvel article")).strip()
+        if des == "" or pd.isna(row.get("Désignation")): des = "Nouvel article"
 
-        mat = str(row.get("Matériau", "marmer"))
-        if pd.isna(mat) or mat.strip() == "":
-            mat = "marmer"
+        mat = str(row.get("Matériau", "marmer")).strip()
+        if mat == "" or pd.isna(row.get("Matériau")): mat = "marmer"
 
         try:
             long = float(row.get("Longueur (m)", 1.00))
-            if pd.isna(long) or long <= 0:
-                long = 1.00
+            if long <= 0 or pd.isna(long): long = 1.00
         except:
             long = 1.00
 
         try:
             larg = float(row.get("Largeur (m)", 0.30))
-            if pd.isna(larg) or larg <= 0:
-                larg = 0.30
+            if larg <= 0 or pd.isna(larg): larg = 0.30
         except:
             larg = 0.30
 
         try:
             qte = int(row.get("Quantité", 1))
-            if pd.isna(qte) or qte <= 0:
-                qte = 1
+            if qte <= 0 or pd.isna(qte): qte = 1
         except:
             qte = 1
 
-        p_m2 = prix_materiaux.get(mat.lower().strip(), 600)
+        p_m2 = prix_materiaux.get(mat.lower(), 600)
         surf = long * larg * qte
         tot_ligne = surf * p_m2
         total_ht += tot_ligne
@@ -205,22 +200,18 @@ if page == "📝 Saisie des Commandes":
             html_invoice += '<table><tr><td style="border:none; font-size:16px; font-weight:bold; color:#1f4e78;">MARBRE DOUKKALI</td></tr></table><br>'
             html_invoice += '<h2>BON DE COMMANDE - MARBRERIE</h2>'
             html_invoice += '<table>'
-            html_invoice += '<tr style="background-color: #f2f2f2;"><th>PROPRIETE</th><th>VALEUR</th></tr>'
-            html_invoice += f'<tr><td><b>N° Dossier</b></td><td>{label_fichier}</td></tr>'
-            html_invoice += f'<tr><td><b>Client</b></td><td>{nom_client}</td></tr>'
-            html_invoice += f'<tr><td><b>Responsable</b></td><td>{responsable_commande}</td></tr>'
-            html_invoice += f'<tr><td><b>Date</b></td><td>{datetime.now().strftime("%Y-%m-%d")}</td></tr>'
+            html_invoice += '<tr><td><b>N° Dossier</b></td><td>' + str(label_fichier) + '</td></tr>'
+            html_invoice += '<tr><td><b>Client</b></td><td>' + str(nom_client) + '</td></tr>'
+            html_invoice += '<tr><td><b>Responsable</b></td><td>' + str(responsable_commande) + '</td></tr>'
+            html_invoice += '<tr><td><b>Date</b></td><td>' + datetime.now().strftime("%Y-%m-%d") + '</td></tr>'
             html_invoice += '</table><br><h3>DETAILS DES ARTICLES</h3>'
             html_invoice += df_items.to_html(index=False, border=1)
-            html_invoice += '<br><h3>RECAPITULATIF FINANCIER</h3>'
-            html_invoice += '<table>'
+            html_invoice += '<br><h3>RECAPITULATIF FINANCIER</h3><table>'
             html_invoice += f'<tr><td><b>TOTAL HT</b></td><td>{total_ht:.2f} DH</td></tr>'
             html_invoice += f'<tr><td><b>TOTAL TTC</b></td><td>{total_ttc:.2f} DH</td></tr>'
-            if remise > 0:
-                html_invoice += f'<tr><td><b>Remise ({remise}%)</b></td><td>{montant_remise:.2f} DH</td></tr>'
-            html_invoice += f'<tr style="background-color: #e2efda;"><td><b>TOTAL NET À PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>'
+            html_invoice += f'<tr><td><b>TOTAL NET À PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>'
             html_invoice += f'<tr><td><b>Avance Versée</b></td><td>{avance:.2f} DH</td></tr>'
-            html_invoice += f'<tr style="background-color: #fce4d6;"><td><b>Reste à Payer</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>'
+            html_invoice += f'<tr><td><b>Reste à Payer</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>'
             html_invoice += '</table></body></html>'
 
             buffer = io.BytesIO()
@@ -237,3 +228,11 @@ if page == "📝 Saisie des Commandes":
 
 # ================= PAGE 2 : HISTORIQUE & RECHERCHE =================
 elif page == "🗂️ Historique & Recherche":
+    st.title("🗂️ Historique & Recherche des Commandes")
+
+    if not st.session_state["historique_commandes"]:
+        st.info("Aucune commande n'est encore enregistrée dans le système.")
+    else:
+        df_hist = pd.DataFrame(st.session_state["historique_commandes"])
+
+        recherche = st.text_input("🔍 Rechercher par N° Dossier, Client ou Matériau :")
