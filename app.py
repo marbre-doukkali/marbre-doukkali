@@ -24,21 +24,21 @@ if not st.session_state["authentifie"]:
             st.error("Mot de passe incorrect.")
     st.stop()
 
-# 2. Base de données الصلبة لمنع اختفاء المبيعات والبيانات نهائياً
-DB_FILE = "database_marbre.xlsx"
-TRASH_FILE = "database_trash.xlsx"
+# 2. Base de données الصلبة المحدثة بصيغة CSV لمنع كراش عدم تثبيت الموديلات
+DB_FILE = "database_marbre.csv"
+TRASH_FILE = "database_trash.csv"
 
 def charger_depot(chemin):
     if os.path.exists(chemin):
         try:
-            return pd.read_excel(chemin).to_dict(orient="records")
+            return pd.read_csv(chemin).to_dict(orient="records")
         except:
             return []
     return []
 
 def sauvegarder_depot(donnees, chemin):
     df = pd.DataFrame(donnees)
-    df.to_excel(chemin, index=False)
+    df.to_csv(chemin, index=False)
 
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = charger_depot(DB_FILE)
@@ -84,10 +84,8 @@ if page == "📝 Saisie des Commandes":
     with col_info1:
         label_fichier = st.text_input("N° Dossier / Référence :", "DOS-2026-001")
     with col_info2:
-        # [حرية الاختيار] حقل نصي مفتوح لكتابة اسم العميل بحرية تامة
         nom_client = st.text_input("Nom du client :", "Client_Anonyme")
     with col_info3:
-        # [حرية الاختيار] حقل نصي مفتوح لكتابة اسم البائع أو المسؤول بيدك بحرية تامة
         responsable_commande = st.text_input("Responsable du suivi (Vendeur) :", "الطوسي")
 
     st.header("🧱 2. Ajouter un Article (إضافة قطعة رخام أو جرانيت)")
@@ -148,7 +146,7 @@ if page == "📝 Saisie des Commandes":
                     "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": label_fichier,
                     "Client": nom_client, "Responsable": responsable_commande, "Désignation": item["Désignation"],
                     "Matériau": item["Matériau"], "Dimensions": item["Dimensions"], "Quantité": item["Quantité"],
-                    "Surface (m2)": item["Surface (m2)"], "Total Ligne HT (DH)": item["Total HT (DH)"],
+                    "Surface (m2)": item["Surface (m2)"], "Total Ligne HT (DH)": item["Total Ligne HT (DH)"],
                     "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
                     "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
                 })
@@ -156,9 +154,9 @@ if page == "📝 Saisie des Commandes":
             sauvegarder_depot(historique_total, DB_FILE)
             st.session_state["historique_commandes"] = historique_total
             st.session_state["panier_actuel"] = []
-            st.success(f"✅ تم حفظ الملف بنجاح وتثبيته في الأرشيف باسم المسؤول والعميل المكتوبين!")
+            st.success(f"✅ تم حفظ الملف بنجاح وتثبيته في الأرشيف!")
 
-# ================= PAGE 2 : HISTORIQUE & RECHERCHE (تعديل محرك البحث السريع الموحد) =================
+# ================= PAGE 2 : HISTORIQUE & RECHERCHE =================
 elif page == "🗂️ Historique & Recherche":
     st.title("🗂️ Historique & Recherche des Commandes")
 
@@ -169,7 +167,6 @@ elif page == "🗂️ Historique & Recherche":
     else:
         df_hist = pd.DataFrame(st.session_state["historique_commandes"])
 
-        # [تعديل البحث الموحد والسهل] خانة بحث واحدة فائقة السرعة
         st.markdown("### 🔍 Barre de recherche intelligente (البحث السريع الموحد):")
         recherche = st.text_input("Tapez le nom du Vendeur (الطوسي), du Client, ou N° Dossier :", key="search_inside_folder")
 
@@ -205,6 +202,16 @@ elif page == "🗂️ Historique & Recherche":
             st.success("Dossier envoyé à la corbeille !")
             st.rerun()
 
+        # تصدير البيانات إلى ملف CSV آمن ومضمون وسريع بدون مكتبات خارجية
+        csv_data = df_filtered.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📊 Exporter l'historique vers CSV (Excel)",
+            data=csv_data,
+            file_name=f"Historique_Marbrerie.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
 # ================= PAGE 3 : CORBEILLE =================
 else:
     st.title("🗑️ Corbeille des dossiers supprimés")
@@ -214,6 +221,3 @@ else:
         st.info("La corbeille est vide.")
     else:
         df_corb = pd.DataFrame(st.session_state["corbeille_commandes"])
-        st.dataframe(df_corb, use_container_width=True)
-
-        list_corb = sorted(list(df_corb['N° Dossier'].astype(str).unique()))
