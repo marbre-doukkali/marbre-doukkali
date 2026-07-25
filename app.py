@@ -4,8 +4,10 @@ import io
 import random
 from datetime import datetime
 
+# 1. إعدادات الهوية البصرية الحديدية والرخامية لورشة دكالة
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
+# تصميم الـ CSS: خلفية نوار جالاكسي الفاخرة مع أعمدة البنايات الحديدية الصلبة لحرف M
 st.markdown("<style>.stApp { background-color: #030712; background-image: radial-gradient(#ffffff 1px, transparent 1px), radial-gradient(#f59e0b 1px, transparent 1px); background-size: 40px 40px; background-position: 0 0, 20px 20px; color: #ffffff; font-family: 'Segoe UI', sans-serif; } .industrial-marble-m { display: flex; justify-content: center; align-items: flex-end; gap: 20px; padding: 40px; background: linear-gradient(180deg, #1f2937 0%, #030712 100%); border: 3px solid #4b5563; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); } .iron-pillar { width: 50px; background: linear-gradient(90deg, #94a3b8 0%, #475569 50%, #334155 100%); border: 2px solid #64748b; border-radius: 3px; box-shadow: 5px 5px 15px rgba(0,0,0,0.6), inset -3px -3px 6px rgba(0,0,0,0.4); } .col-1 { height: 130px; } .col-2 { height: 85px; background: linear-gradient(90deg, #64748b 0%, #334155 100%); } .col-3 { height: 45px; background: linear-gradient(90deg, #475569 0%, #1e293b 100%); } .col-4 { height: 85px; background: linear-gradient(90deg, #64748b 0%, #334155 100%); } .col-5 { height: 130px; } .industrial-title { font-size: 30px; font-weight: bold; color: #ffffff; text-align: center; margin-top: 15px; text-shadow: 3px 3px 6px #000000; } h1, h2, h3 { color: #f59e0b !important; text-shadow: 1px 1px 2px #000000; text-align: right; } .stButton>button { background-color: #111827 !important; color: #ffffff !important; border: 2px solid #f59e0b !important; border-radius: 6px; font-weight: bold; font-size: 16px; padding: 8px 20px; } .stButton>button:hover { background-color: #f59e0b !important; color: #111827 !important; border: 2px solid #ffffff !important; } div[data-testid='stSidebar'] { background-color: #111827 !important; } .marble-panel { background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); color: #0f172a !important; padding: 25px; border-radius: 12px; border-left: 8px solid #f59e0b; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }</style>", unsafe_allow_html=True)
 
 PASSWORD_SECRET = "2017@2026"
@@ -25,6 +27,7 @@ if not st.session_state["authentifie"]:
             st.error("الرقم السري غير صحيح.")
     st.stop()
 
+# تفعيل قنوات الذاكرة المستقرة لحماية الملفات والكوغات من التداخل والضياع
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -47,6 +50,7 @@ prix_materiaux = {
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 liste_designations_prefere = ["Escalier (درج)", "Plan de cuisine (مطبخ)", "Revêtement de sol (أرضية)", "Plinthe (حزام)", "Seuil de porte (عتبة)", "Autre (كتابة مخصصة)"]
 
+# اللوحة الجانبية مع الأعمدة الحديدية المصغرة للهيكل المتين
 st.sidebar.markdown("<div class='industrial-marble-m' style='padding:12px; margin-bottom:10px; gap:6px;'><div class='iron-pillar col-1' style='width:12px; height:45px;'></div><div class='iron-pillar col-2' style='width:12px; height:30px;'></div><div class='iron-pillar col-3' style='width:12px; height:15px;'></div><div class='iron-pillar col-4' style='width:12px; height:30px;'></div><div class='iron-pillar col-5' style='width:12px; height:45px;'></div></div>", unsafe_allow_html=True)
 st.sidebar.markdown("<h3 style='text-align: center; color: #22d3ee; margin-top:0;'>نظام مبيعات دكالة</h3>", unsafe_allow_html=True)
 page = st.sidebar.radio("📋 الانتقال بين الأقسام :", ["📝 تسجيل الطلبيات الجديدة", "🗂️ الأرشيف والبحث الذكي", "🗑️ سلة المهملات (Corbeille)"])
@@ -108,21 +112,21 @@ if page == "📝 تسجيل الطلبيات الجديدة":
         total_net = total_ttc - montant_remise
         reste_a_payer = total_net - avance
         st.markdown(f"#### الصافي المطلوب دفعه : {total_net:.2f} DH | المتبقي : {reste_a_payer:.2f} DH")
-        if st.button("💾 ENREGISTRER DEFINITIVEMENT DANS L'HISTORIQUE"):
-            date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            id_commande = f"CMD-{random.randint(10000, 99999)}"
-            for item in st.session_state["panier_actuel"]:
-                st.session_state["historique_commandes"].append({
-                    "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": str(label_fichier).strip(),
-                    "Client": nom_client, "Responsable": responsable_commande, "Désignation": item["Désignation"],
-                    "Matériau": item["Matériau"], "Dimensions": item["Dimensions"], "Quantité": item["Quantité"],
-                    "Surface (m2)": item["Surface (m2)"], "Total HT (DH)": item["Total HT (DH)"],
-                    "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
-                    "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
-                })
-            st.session_state["panier_actuel"] = []
-            st.success("✅ تم حفظ وتأمين الملف بنجاح في الأرشيف الموحد!")
-            st.rerun()
 
-# ================= القسم 2 : الأرشيف والبحث الذكي الموحد =================
-elif page == "🗂️ الأرشيف والبحث الذكي":
+        # [تأمين أزرار الإجراءات للطباعة والحفظ المتوازي]
+        col_act1, col_act2 = st.columns(2)
+        with col_act1:
+            if st.button("💾 ENREGISTRER DEFINITIVEMENT DANS L'HISTORIQUE"):
+                date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                id_commande = f"CMD-{random.randint(10000, 99999)}"
+                for item in st.session_state["panier_actuel"]:
+                    st.session_state["historique_commandes"].append({
+                        "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": str(label_fichier).strip(),
+                        "Client": nom_client, "Responsable": responsable_commande, "Désignation": item["Désignation"],
+                        "Matériau": item["Matériau"], "Dimensions": item["Dimensions"], "Quantité": item["Quantité"],
+                        "Surface (m2)": item["Surface (m2)"], "Total HT (DH)": item["Total HT (DH)"],
+                        "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
+                        "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
+                    })
+                st.session_state["panier_actuel"] = []
+                st.success("✅ تم حفظ وتأمين الملف بنجاح في الأرشيف الموحد!")
