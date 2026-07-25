@@ -37,7 +37,6 @@ prix_materiaux = {
 
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 
-# تفعيل مخازن البيانات الدائمة لحماية الملفات وسلة المهملات
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -216,7 +215,9 @@ elif page == "🗂️ Historique & Recherche":
     else:
         df_hist = pd.DataFrame(st.session_state["historique_commandes"])
 
-        # [إصلاح محرك البحث] تم إعداده ليعمل بدون الحاجة لتحديث الصفحة تكراراً
+        # إصلاح أسلوب البحث لتجنب تراكم شروط الفلترة المسببة لفتح الأقواس بشكل خاطئ
         recherche = st.text_input("🔍 Rechercher par N° Dossier, Client ou Matériau :", key="search_bar_input")
+
         if recherche:
-            df_filtered = df_hist[
+            req = recherche.lower().strip()
+            cond_dossier = df_hist['N° Dossier'].astype(str).str.lower().str.contains(req, na=False)
