@@ -14,7 +14,7 @@ except ImportError:
 # 1. إعداد الصفحة وتخصيص المظهر الصناعي لشركة رخام دكالة
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
-# تخصيص الـ CSS وتعديل أطوال الأعمدة (الـ Pillars) لتشكيل حرف M هندسي متناسق
+# تخصيص الـ CSS وبناء تصميم هندسي متصل وحقيقي لحرف M صناعي فخم
 st.markdown("""
 <style>
 .stApp {
@@ -24,11 +24,12 @@ st.markdown("""
     color: #ffffff;
     font-family: 'Segoe UI', sans-serif;
 }
+/* حاوية مخصصة لربط الأعمدة هندسياً لتشكيل حرف M */
 .industrial-marble-m {
     display: flex;
     justify-content: center;
-    align-items: flex-end;
-    gap: 20px;
+    align-items: flex-start; /* محاذاة من الأعلى لضبط انسيابية الحرف */
+    gap: 8px; /* تقريب الأعمدة لتبدو ككتلة واحدة متصلة */
     padding: 40px;
     background: linear-gradient(180deg, #1f2937 0%, #030712 100%);
     border: 2px solid #4b5563;
@@ -37,18 +38,20 @@ st.markdown("""
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
 .iron-pillar {
-    width: 50px;
+    width: 38px;
     background: linear-gradient(90deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%);
     border: 2px solid #64748b;
-    border-radius: 3px;
+    border-radius: 4px;
     box-shadow: 5px 5px 15px rgba(0,0,0,0.6), inset -3px -3px 6px rgba(0,0,0,0.4);
+    transition: all 0.3s ease;
 }
-/* تعديل الارتفاعات لترتيب الأعمدة على شكل حرف M */
-.col-1 { height: 140px; }
-.col-2 { height: 55px; background: linear-gradient(90deg, #94a3b8 0%, #475569 100%); }
-.col-3 { height: 95px; background: linear-gradient(90deg, #64748b 0%, #1e293b 100%); }
-.col-4 { height: 55px; background: linear-gradient(90deg, #94a3b8 0%, #475569 100%); }
-.col-5 { height: 140px; }
+/* الأطوال الرقمية الدقيقة لرسم خطوط حرف M هندسياً من الأعلى للأسفل */
+.col-1 { height: 160px; }
+.col-2 { height: 70px; margin-top: 15px; background: linear-gradient(90deg, #94a3b8 0%, #475569 100%); }
+.col-3 { height: 110px; margin-top: 40px; background: linear-gradient(90deg, #64748b 0%, #1e293b 100%); }
+.col-4 { height: 70px; margin-top: 15px; background: linear-gradient(90deg, #94a3b8 0%, #475569 100%); }
+.col-5 { height: 160px; }
+
 .industrial-title {
     font-size: 30px;
     font-weight: bold;
@@ -110,7 +113,7 @@ if "lignes_commande" not in st.session_state:
         {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
     ]
 
-# بوابة حماية الدخول بالأعمدة الصناعية المبيانية المترتبة على شكل حرف M
+# بوابة حماية الدخول بهيكل حرف M المتناسق والجميل
 if not st.session_state["authentifie"]:
     st.markdown("<div class='industrial-marble-m'><div class='iron-pillar col-1'></div><div class='iron-pillar col-2'></div><div class='iron-pillar col-3'></div><div class='iron-pillar col-4'></div><div class='iron-pillar col-5'></div></div>", unsafe_allow_html=True)
     st.markdown("<div class='industrial-title'>مرحباً بك في نظام إدارة ومبيعات رخام دكالة</div>", unsafe_allow_html=True)
@@ -138,8 +141,8 @@ prix_materiaux = {
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 liste_responsables = ["الطوسي (El Tossi)", "Nadim Jadoui", "Responsable Standard"]
 
-# قائمة الانتقال الجانبية مع الأعمدة الهندسية المصغرة على شكل حرف M أيضاً
-st.sidebar.markdown("<div class='industrial-marble-m' style='padding:12px; margin-bottom:10px; gap:6px;'><div class='iron-pillar col-1' style='width:12px; height:45px;'></div><div class='iron-pillar col-2' style='width:12px; height:15px;'></div><div class='iron-pillar col-3' style='width:12px; height:30px;'></div><div class='iron-pillar col-4' style='width:12px; height:15px;'></div><div class='iron-pillar col-5' style='width:12px; height:45px;'></div></div>", unsafe_allow_html=True)
+# قائمة الانتقال الجانبية مع حرف M المصغر والأنيق
+st.sidebar.markdown("<div class='industrial-marble-m' style='padding:12px; margin-bottom:10px; gap:4px;'><div class='iron-pillar col-1' style='width:10px; height:45px;'></div><div class='iron-pillar col-2' style='width:10px; height:18px; margin-top:4px;'></div><div class='iron-pillar col-3' style='width:10px; height:30px; margin-top:12px;'></div><div class='iron-pillar col-4' style='width:10px; height:18px; margin-top:4px;'></div><div class='iron-pillar col-5' style='width:10px; height:45px;'></div></div>", unsafe_allow_html=True)
 st.sidebar.markdown("<h3 style='text-align: center; color: #ffffff; margin-top:0;'>نظام مبيعات دكالة</h3>", unsafe_allow_html=True)
 page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche", "🗑️ Corbeille (سلة المهملات)"])
 
@@ -149,7 +152,7 @@ if st.sidebar.button("🔒 Se déconnecter"):
 
 # ================= القسم 1 : تسجيل ومتابعة الطلبيات والتركيبات المطور =================
 if page == "📝 Saisie des Commandes":
-    st.title("📝 Gestion et Création des Commandes")
+    st.title("📝 Gestion et Creation des Commandes")
 
     if st.button("🆕 Nouveau Dossier (Vider le formulaire)"):
         st.session_state["lignes_commande"] = [
@@ -161,7 +164,7 @@ if page == "📝 Saisie des Commandes":
     col_info1, col_info2, col_info3 = st.columns(3)
 
     with col_info1:
-        label_fichier = st.text_input("N° Dossier / Référence :", "DOS-2026-001")
+        label_fichier = st.text_input("N° Dossier / Reference :", "DOS-2026-001")
     with col_info2:
         nom_client = st.text_input("Nom du client :", "Client_Anonyme")
     with col_info3:
@@ -188,7 +191,6 @@ if page == "📝 Saisie des Commandes":
     panier_final = []
     total_ht = 0.0
 
-    # معالجة وحساب أسطر الجدول بدقة تامة وضمان عدم اختفائها وحساب الأمتار المربعة والتكلفة
     for idx, row in edited_df.iterrows():
         des = str(row.get("Désignation", "Nouvel article")).strip()
         if des == "" or pd.isna(row.get("Désignation")): des = "Nouvel article"
@@ -218,20 +220,19 @@ if page == "📝 Saisie des Commandes":
             "Quantité": qte, "Surface (m2)": round(surf, 2), "Total HT (DH)": round(tot_ligne, 2)
         })
 
-    st.header("🧮 Synthèse Financière")
+    st.header("🧮 Synthese Financiere")
     total_ttc = total_ht * 1.2
 
     col_finance1, col_finance2 = st.columns(2)
     with col_finance1:
         remise = st.number_input("Remise globale (%)", min_value=0.0, max_value=100.0, value=0.0)
     with col_finance2:
-        avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
+        avance = st.number_input("Somme d'avance versee (DH)", min_value=0.0, value=0.0)
 
     montant_remise = total_ttc * (remise / 100)
     total_net = total_ttc - montant_remise
     reste_a_payer = total_net - avance
 
-    # لوحة الفاتورة والحسابات المالية
     st.markdown(f"""
     <div class='marble-panel'>
         <h3 style='color:#0f172a !important; border-bottom:2px solid #0f172a;'>🧾 الملخص المالي والتركيب الفني</h3>
@@ -242,8 +243,3 @@ if page == "📝 Saisie des Commandes":
         <p>💵 Avance : <b>{avance:,.2f} DH</b></p>
         <p>🚨 Reste à payer : <span style='font-size:18px; color:#b91c1c;'><b>{reste_a_payer:,.2f} DH</b></span></p>
     </div>
-    """, unsafe_allow_html=True)
-
-    if reste_a_payer <= 0:
-        st.success("Facture Entièrement Payée")
-
