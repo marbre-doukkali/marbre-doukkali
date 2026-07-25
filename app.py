@@ -236,3 +236,5 @@ if page == "📝 Saisie des Commandes":
             buffer.seek(0)
 
             st.download_button(
+                   label="🖨️ Télécharger le Bon de Commande (HTML)",
+                data=buffer,
