@@ -4,56 +4,52 @@ import io
 import random
 from datetime import datetime
 
-# 1. إعدادات الهوية الروحية البصرية الجديدة لورشة رخام دكالة
+# 1. إعدادات الهوية البصرية الرخامية الجديدة لورشة رخام دكالة
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
-# ديزاين الـ CSS الروحاني المخصص لتغيير اللون الأبيض الكلاسيكي ورسم شعار الحرف M النوراني
+# تصميم الـ CSS الرخامي العصري لحذف الأبيض الكلاسيكي ورسم شعار الـ M الفاخر بعروق هندسية
 st.markdown("""
     <style>
-    /* تغيير الخلفية البيضاء الكلاسيكية إلى مظهر روحاني عميق */
+    /* تغيير الخلفية البيضاء إلى مظهر رخامي داكن واحترافي مريح للعين */
     .stApp {
-        background-color: #0f172a;
+        background-color: #0b1329;
         color: #f8fafc;
     }
-    /* تصميم شعار الـ M الأزرق الروحاني محاطاً بالهالة النورانية */
-    .spiritual-logo {
+    /* تصميم شعار الحرف M الأزرق الفاخر محاطاً بعروق وخلفية رخامية هندسية */
+    .marble-logo-box {
         text-align: center;
-        padding: 20px;
-        background: radial-gradient(circle, rgba(30,58,138,0.6) 0%, rgba(15,23,42,0) 70%);
-        border-radius: 50%;
+        padding: 25px;
+        background: radial-gradient(circle, rgba(29,78,216,0.25) 0%, rgba(11,19,41,0) 70%);
+        border: 2px dashed rgba(56,189,248,0.3);
+        border-radius: 15px;
         margin-bottom: 25px;
     }
-    .spiritual-m {
-        font-family: 'Georgia', serif;
-        font-size: 75px;
+    .marble-m-text {
+        font-family: 'Century Gothic', sans-serif;
+        font-size: 80px;
         font-weight: bold;
         color: #38bdf8;
-        text-shadow: 0 0 20px #1d4ed8, 0 0 40px #1e40af, 0 0 60px #60a5fa;
-        animation: pulse 3s infinite alternate;
+        text-shadow: 3px 3px 0px #1e3a8a, 0 0 25px rgba(56,189,248,0.6);
     }
-    @keyframes pulse {
-        0% { transform: scale(1); text-shadow: 0 0 20px #1d4ed8; }
-        100% { transform: scale(1.05); text-shadow: 0 0 40px #60a5fa; }
-    }
-    /* زخرفة العناوين باللون الذهبي الرخامي */
+    /* زخرفة العناوين باللون الذهبي الرخامي الفاخر */
     h1, h2, h3 {
         color: #f59e0b !important;
-        text-shadow: 1px 1px 2px #000;
+        text-shadow: 1px 1px 3px #000;
         text-align: right;
     }
     .stButton>button {
-        background-color: #1e3a8a !important;
+        background-color: #1c2541 !important;
         color: #f8fafc !important;
         border: 1px solid #38bdf8 !important;
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: bold;
     }
     .stButton>button:hover {
         background-color: #38bdf8 !important;
-        color: #0f172a !important;
+        color: #0b1329 !important;
     }
     div[data-testid="stSidebar"] {
-        background-color: #1e293b !important;
+        background-color: #1c2541 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -64,8 +60,8 @@ if "authentifie" not in st.session_state:
     st.session_state["authentifie"] = False
 
 if not st.session_state["authentifie"]:
-    st.markdown("<div class='spiritual-logo'><div class='spiritual-m'>M</div></div>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center;'>🔒 نظام رخام دكالة الروحاني - تسجيل الدخول</h2>", unsafe_allow_html=True)
+    st.markdown("<div class='marble-logo-box'><div class='marble-m-text'>M</div></div>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>🔒 نظام رخام دكالة الرخامي - تسجيل الدخول</h2>", unsafe_allow_html=True)
     mot_de_passe = st.text_input("أدخل الرقم السري الخاص بالفريق :", type="password")
     if st.button("تسجيل الدخول للنظام"):
         if mot_de_passe == PASSWORD_SECRET:
@@ -75,7 +71,7 @@ if not st.session_state["authentifie"]:
             st.error("الرقم السري غير صحيح.")
     st.stop()
 
-# تفعيل الذاكرة الحية المستقلة بنسبة 100% لضمان عمل الملفات والكوغباي بدون كراش
+# تفعيل قنوات الأرشيف والكوغباي المستقلة في الذاكرة لضمان الاستقرار
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -85,6 +81,7 @@ if "corbeille_commandes" not in st.session_state:
 if "panier_actuel" not in st.session_state:
     st.session_state["panier_actuel"] = []
 
+# قاعدة بيانات أسعار المواد الافتراضية
 prix_materiaux = {
     "marmer": 600, "crema_marfil": 650, "carrara": 1100, "calacatta": 1800,
     "statuario": 2200, "nero_marquina": 750, "emperador_fonce": 800, "emperador_clair": 700,
@@ -98,9 +95,9 @@ prix_materiaux = {
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 liste_designations_prefere = ["Escalier (درج)", "Plan de cuisine (مطبخ)", "Revêtement de sol (أرضية)", "Plinthe (حزام)", "Seuil de porte (عتبة)", "Autre (كتابة مخصصة)"]
 
-# القائمة الجانبية المنسقة بالنمط الروحاني الداكن
-st.sidebar.markdown("<div class='spiritual-logo'><div class='spiritual-m' style='font-size:40px;'>M</div></div>", unsafe_allow_html=True)
-st.sidebar.markdown("<h3 style='text-align: center; color: #38bdf8;'>لوحة التحكم والفرز</h3>", unsafe_allow_html=True)
+# القائمة الجانبية (Sidebar) بتنسيقها الرخامي الاحترافي الجديد
+st.sidebar.markdown("<div class='marble-logo-box' style='padding:10px; margin-bottom:10px;'><div class='marble-m-text' style='font-size:35px;'>M</div></div>", unsafe_allow_html=True)
+st.sidebar.markdown("<h3 style='text-align: center; color: #38bdf8;'>نظام إدارة مبيعات دكالة</h3>", unsafe_allow_html=True)
 page = st.sidebar.radio("📋 الانتقال بين الأقسام :", ["📝 تسجيل الطلبيات الجديدة", "🗂️ الأرشيف والبحث الذكي", "🗑️ سلة المهملات (Corbeille)"])
 
 if st.sidebar.button("🔒 تسجيل الخروج"):
@@ -164,7 +161,7 @@ if page == "📝 تسجيل الطلبيات الجديدة":
         total_net = total_ttc - montant_remise
         reste_a_payer = total_net - avance
 
-        st.markdown(f"#### الصافي المطلوب دفعه : {total_net:.2f} DH | المتبقي : {reste_a_payer:.2f} DH")
+        st.markdown(f"#### الصافي المطلوب دفعه : {total_net:.2f} DH | ⚠️ المتبقي : {reste_a_payer:.2f} DH")
 
         if st.button("💾 ENREGISTRER DEFINITIVEMENT DANS L'HISTORIQUE"):
             date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -185,7 +182,7 @@ if page == "📝 تسجيل الطلبيات الجديدة":
 
 # ================= القسم 2 : الأرشيف والبحث الذكي الموحد =================
 elif page == "🗂️ الأرشيف والبحث الذكي":
-    st.markdown("<h1>🗂️ أرشيف المبيعات والفرز الذكي</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>🗂️ أرشيف المبيعات والفرز الرخامي الذكي</h1>", unsafe_allow_html=True)
 
     if not st.session_state["historique_commandes"]:
         st.info("الأرشيف فارغ حالياً.")
@@ -206,8 +203,10 @@ elif page == "🗂️ الأرشيف والبحث الذكي":
 
         st.markdown("### 🗑️ نقل ملف كامل إلى سلة المهملات (Corbeille)")
         list_docs = sorted(list(df_filtered['N° Dossier'].astype(str).unique()))
-        dossier_a_supprimer = st.selectbox("إختر رقم الملف للنقل :", list_docs)
 
-        if st.button("❌ نقل إلى الكوغباي"):
-            # تصفية وفصل الملف المختار بشكل برمي دقيق شغال 100% وبدون اخطاء
-            lignes_a_conserver = [c for c in st.session_state["historique_commandes"] if str(c["N° Dossier"]) != str(dossier_a_supprimer)]
+        if list_docs:
+            dossier_a_supprimer = st.selectbox("إختر رقم الملف للنقل :", list_docs)
+
+            if st.button("❌ نقل إلى الكوغباي"):
+                # تم تصحيح دالة الفصل هنا بدقة متناهية لمنع التعليق
+                lignes_a_conserver = [c for c in st.session_state["historique_commandes"] if str(c["N° Dossier"]) != str(dossier_a_supprimer)]
