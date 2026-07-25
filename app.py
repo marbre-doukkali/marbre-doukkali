@@ -4,20 +4,16 @@ import io
 import random
 from datetime import datetime
 
-# 1. إعدادات وتأمين الهوية البصرية الرخامية الفاخرة لورشة دكالة
+# 1. إعدادات الهوية البصرية الرخامية المتباينة عالية الوضوح
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
-# تصميم الـ CSS: تحويل الأرشيف إلى طراز الرخام الأبيض الفخم مع كتابة فائقة الوضوح
 st.markdown("""
     <style>
-    /* المظهر العام المستوحى من عروق الرخام الأسود والداكن الفخم */
     .stApp {
         background-color: #111827;
         color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
-    /* تصميم شعار الحرف M الأزرق الفاخر بإطار هندسي */
     .marble-logo-box {
         text-align: center;
         padding: 20px;
@@ -32,8 +28,6 @@ st.markdown("""
         color: #22d3ee;
         text-shadow: 2px 2px 4px #000000;
     }
-
-    /* واجهة رخامية كلاسيكية متباينة جداً للصفحة الثانية والأرشيف */
     .marble-panel {
         background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
         background-image: radial-gradient(rgba(148,163,184,0.15) 1px, transparent 0);
@@ -45,21 +39,15 @@ st.markdown("""
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         margin-bottom: 25px;
     }
-
-    /* كتابة واضحة ومتباينة جداً داخل لوحة الرخام الأبيض */
     .marble-panel h2, .marble-panel p {
         color: #0f172a !important;
         font-weight: bold !important;
     }
-
-    /* زخرفة العناوين العامة باللون الذهبي الملكي */
     h1, h2, h3 {
         color: #f59e0b !important;
         text-shadow: 1px 1px 2px #000000;
         text-align: right;
     }
-
-    /* تنسيق أزرار المعلمية المستقرة */
     .stButton>button {
         background-color: #0f172a !important;
         color: #ffffff !important;
@@ -74,8 +62,6 @@ st.markdown("""
         color: #0f172a !important;
         border: 2px solid #ffffff !important;
     }
-
-    /* تنسيق اللوحة الجانبية الداكنة */
     div[data-testid="stSidebar"] {
         background-color: #0f172a !important;
     }
@@ -99,7 +85,7 @@ if not st.session_state["authentifie"]:
             st.error("الرقم السري غير صحيح.")
     st.stop()
 
-# تفعيل قنوات الذاكرة المستقرة لحماية الملفات والكوغات من التداخل
+# تفعيل قنوات الذاكرة الحية المستقرة والمحمية بنسبة 100%
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -122,7 +108,6 @@ prix_materiaux = {
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 liste_designations_prefere = ["Escalier (درج)", "Plan de cuisine (مطبخ)", "Revêtement de sol (أرضية)", "Plinthe (حزام)", "Seuil de porte (عتبة)", "Autre (كتابة مخصصة)"]
 
-# اللوحة الجانبية الكلاسيكية الفاخرة
 st.sidebar.markdown("<div class='marble-logo-box' style='padding:10px; margin-bottom:10px;'><div class='marble-m-text' style='font-size:35px;'>M</div></div>", unsafe_allow_html=True)
 st.sidebar.markdown("<h3 style='text-align: center; color: #22d3ee;'>نظام مبيعات دكالة</h3>", unsafe_allow_html=True)
 page = st.sidebar.radio("📋 الانتقال بين الأقسام :", ["📝 تسجيل الطلبيات الجديدة", "🗂️ الأرشيف والبحث الذكي", "🗑️ سلة المهملات (Corbeille)"])
@@ -152,7 +137,7 @@ if page == "📝 تسجيل الطلبيات الجديدة":
     col_in1, col_in2, col_in3, col_in4 = st.columns(4)
     with col_in1:
         choix_des = st.selectbox("Désignation (البيان) :", liste_designations_prefere)
-        input_des = st.text_input("بيان مخصص (إذا اخترت أخرى) :", "Élément unique") if choix_des == "Autre (كتابة مخصصة)" else choix_des
+        input_des = st.text_input("بيان مخصص :", "Élément unique") if choix_des == "Autre (كتابة مخصصة)" else choix_des
     with col_in2:
         input_mat = st.selectbox("Matériau (نوع الرخام) :", liste_options_materiaux)
     with col_in3:
@@ -203,7 +188,7 @@ if page == "📝 تسجيل الطلبيات الجديدة":
 
             for item in st.session_state["panier_actuel"]:
                 st.session_state["historique_commandes"].append({
-                    "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": label_fichier,
+                    "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": str(label_fichier).strip(),
                     "Client": nom_client, "Responsable": responsable_commande, "Désignation": item["Désignation"],
                     "Matériau": item["Matériau"], "Dimensions": item["Dimensions"], "Quantité": item["Quantité"],
                     "Surface (m2)": item["Surface (m2)"], "Total HT (DH)": item["Total HT (DH)"],
@@ -216,7 +201,18 @@ if page == "📝 تسجيل الطلبيات الجديدة":
 
 # ================= القسم 2 : الأرشيف والبحث الذكي الموحد =================
 elif page == "🗂️ الأرشيف والبحث الذكي":
-    # تم إصلاح المسافات البادئة (Indentation) هنا بدقة تامة لتفادي الـ Script execution error
     st.markdown("""
         <div class='marble-panel'>
             <h2 style='color:#0f172a !important; text-align:right; margin:0;'>🗂️ نظام إدارة مبيعات دكالة - الفرز الرخامي الذكي</h2>
+            <p style='color:#334155 !important; text-align:right;'>هنا تجد كافة الطلبيات المحفوظة منسقة داخل واجهة رخامية كلاسيكية متباينة الألوان لسهولة تامة في القراءة والبحث.</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    if not st.session_state["historique_commandes"]:
+        st.info("الأرشيف فارغ حالياً، قم بتسجيل وتثبيت طلبية أولاً.")
+    else:
+        df_hist = pd.DataFrame(st.session_state["historique_commandes"])
+
+        st.markdown("### 🔍 صندوق البحث السريع والموحد (اكتب اسم البائع الطوسي أو الزبون للفرز الفوري):")
+        recherche = st.text_input("ابحث هنا بالكلمة :", key="search_inside_folder")
+
