@@ -48,7 +48,7 @@ if "lignes_commande" not in st.session_state:
         {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
     ]
 
-# القائمة الجانبية للتنقل
+# Navigation de l'ERP
 st.sidebar.title("Ⓜ️ Menu Marbrerie")
 page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche", "🗑️ Corbeille (سلة المهملات)"])
 
@@ -79,15 +79,16 @@ if page == "📝 Saisie des Commandes":
     st.header("📊 Tableau des Articles (Style Excel)")
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
 
-    # اختيار المواد عبر قائمة منسدلة (سهم) داخل الجدول مباشرة
     edited_df = st.data_editor(
         df_form,
         num_rows="dynamic",
         use_container_width=True,
-        key="editor_commande",
+        key="editor_commande_unique_key",
         column_config={
             "Matériau": st.column_config.SelectboxColumn(
                 "Matériau",
+                help="Sélectionnez le type de marbre ou granite",
+                width="medium",
                 options=liste_options_materiaux,
                 required=True
             )
@@ -101,10 +102,12 @@ if page == "📝 Saisie des Commandes":
 
     for idx, row in edited_df.iterrows():
         des = str(row.get("Désignation", "Nouvel article")).strip()
-        if des == "" or pd.isna(row.get("Désignation")): des = "Nouvel article"
+        if des == "" or pd.isna(row.get("Désignation")):
+            des = "Nouvel article"
 
         mat = str(row.get("Matériau", "marmer")).strip()
-        if mat == "" or pd.isna(row.get("Matériau")): mat = "marmer"
+        if mat == "" or pd.isna(row.get("Matériau")):
+            mat = "marmer"
 
         try:
             long = float(row.get("Longueur (m)", 1.00))
@@ -235,4 +238,3 @@ elif page == "🗂️ Historique & Recherche":
     else:
         df_hist = pd.DataFrame(st.session_state["historique_commandes"])
 
-        recherche = st.text_input("🔍 Rechercher par N° Dossier, Client ou Matériau :")
