@@ -233,14 +233,11 @@ if page == "📝 Saisie des Commandes":
     total_net = total_ttc - montant_remise
     reste_a_payer = total_net - avance
 
-    # تم عزل الرموز الخاصة والنسب لحماية بناء سلسلة الـ HTML
-    st.markdown(f"""
-    <div class='marble-panel'>
-        <h3 style='color:#0f172a !important; border-bottom:2px solid #0f172a;'>🧾 الملخص المالي والتركيب الفني</h3>
-        <p>💰 TOTAL HT : <b>{total_ht:,.2f} DH</b></p>
-        <p>📈 TOTAL TTC (HT x 1.2) : <b>{total_ttc:,.2f} DH</b></p>
-        <p>📉 Montant Remise : <b>{montant_remise:,.2f} DH ({remise:,.1f}%)</b></p>
-        <p>⭐ TOTAL NET À PAYER : <span style='font-size:18px; color:#15803d;'><b>{total_net:,.2f} DH</b></span></p>
-        <p>💵 Avance : <b>{avance:,.2f} DH</b></p>
-        <p>🚨 Reste à payer : <span style='font-size:18px; color:#b91c1c;'><b>{reste_a_payer:,.2f} DH</b></span></p>
-    </div>
+    # بناء القالب بأمان تام وفصل الرموز الخاصة المسببة للمشاكل
+    panel_html = "<div class='marble-panel'>"
+    panel_html += "<h3 style='color:#0f172a !important; border-bottom:2px solid #0f172a;'>🧾 الملخص المالي والتركيب الفني</h3>"
+    panel_html += f"<p>💰 TOTAL HT : <b>{total_ht:,.2f} DH</b></p>"
+    panel_html += f"<p>📈 TOTAL TTC (HT x 1.2) : <b>{total_ttc:,.2f} DH</b></p>"
+    panel_html += f"<p>📉 Montant Remise : <b>{montant_remise:,.2f} DH ({remise:,.1f} Pourcent)</b></p>"
+    panel_html += f"<p>⭐ TOTAL NET À PAYER : <span style='font-size:18px; color:#15803d;'><b>{total_net:,.2f} DH</b></span></p>"
+    panel_html += f"<p>💵 Avance : <b>{avance:,.2f} DH</b></p>"
