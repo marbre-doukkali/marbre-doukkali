@@ -4,11 +4,11 @@ import io
 import random
 from datetime import datetime
 
-# 1. إعدادات الهوية البصرية الرخامية المتباينة عالية الوضوح لورشة دكالة
+# 1. إعدادات الهوية البصرية الحديدية والرخامية لورشة دكالة
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
-# تصميم الـ CSS: واجهة الرخام الأبيض الفخم المتباين شديد الوضوح في القراءة والفرز
-st.markdown("<style>.stApp { background-color: #111827; color: #ffffff; font-family: 'Segoe UI', sans-serif; } .marble-logo-box { text-align: center; padding: 20px; background: radial-gradient(circle, rgba(14,116,144,0.3) 0%, rgba(17,24,39,0) 70%); border: 2px solid #06b6d4; border-radius: 12px; margin-bottom: 20px; } .marble-m-text { font-size: 75px; font-weight: bold; color: #22d3ee; text-shadow: 2px 2px 4px #000000; } h1, h2, h3 { color: #f59e0b !important; text-shadow: 1px 1px 2px #000000; text-align: right; } .stButton>button { background-color: #0f172a !important; color: #ffffff !important; border: 2px solid #f59e0b !important; border-radius: 6px; font-weight: bold; font-size: 16px; padding: 8px 20px; } .stButton>button:hover { background-color: #f59e0b !important; color: #0f172a !important; border: 2px solid #ffffff !important; } div[data-testid='stSidebar'] { background-color: #0f172a !important; }</style>", unsafe_allow_html=True)
+# تصميم الـ CSS: رسم أعمدة بنايات حديدية صلبة ترسم الحرف M مع واجهة الرخام المتباين
+st.markdown("<style>.stApp { background-color: #111827; color: #ffffff; font-family: 'Segoe UI', sans-serif; } .industrial-marble-m { display: flex; justify-content: center; align-items: flex-end; gap: 20px; padding: 40px; background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); border: 3px solid #64748b; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); } .iron-pillar { width: 50px; background: linear-gradient(90deg, #94a3b8 0%, #475569 50%, #334155 100%); border: 2px solid #64748b; border-radius: 3px; box-shadow: 5px 5px 15px rgba(0,0,0,0.6), inset -3px -3px 6px rgba(0,0,0,0.4); } .col-1 { height: 130px; } .col-2 { height: 85px; background: linear-gradient(90deg, #64748b 0%, #334155 100%); } .col-3 { height: 45px; background: linear-gradient(90deg, #475569 0%, #1e293b 100%); } .col-4 { height: 85px; background: linear-gradient(90deg, #64748b 0%, #334155 100%); } .col-5 { height: 130px; } .industrial-title { font-size: 30px; font-weight: bold; color: #ffffff; text-align: center; margin-top: 15px; text-shadow: 3px 3px 6px #000000; } h1, h2, h3 { color: #f59e0b !important; text-shadow: 1px 1px 2px #000000; text-align: right; } .stButton>button { background-color: #0f172a !important; color: #ffffff !important; border: 2px solid #f59e0b !important; border-radius: 6px; font-weight: bold; font-size: 16px; padding: 8px 20px; } .stButton>button:hover { background-color: #f59e0b !important; color: #0f172a !important; border: 2px solid #ffffff !important; } div[data-testid='stSidebar'] { background-color: #0f172a !important; }</style>", unsafe_allow_html=True)
 
 PASSWORD_SECRET = "2017@2026"
 
@@ -16,7 +16,12 @@ if "authentifie" not in st.session_state:
     st.session_state["authentifie"] = False
 
 if not st.session_state["authentifie"]:
-    st.markdown("<div class='marble-logo-box'><div class='marble-m-text'>M</div></div><div style='text-align: center; font-size: 24px; font-weight: bold; color: #ffffff; margin-bottom: 20px;'>源 نظام مبيعات رخام دكالة العصري</div>", unsafe_allow_html=True)
+    # عرض أعمدة البنايات الحديدية الصلبة التي تشكل حرف M الهيكلي في صفحة الدخول
+    st.markdown("<div class='industrial-marble-m'><div class='iron-pillar col-1'></div><div class='iron-pillar col-2'></div><div class='iron-pillar col-3'></div><div class='iron-pillar col-4'></div><div class='iron-pillar col-5'></div></div>", unsafe_allow_html=True)
+
+    # [تعديل كلمة الترحيب في البداية] لتصبح رسمية واحترافية تماماً كما اتفقنا
+    st.markdown("<div class='industrial-title'>مرحباً بك في نظام المبيعات الخاص برخام دكالة</div>", unsafe_allow_html=True)
+
     mot_de_passe = st.text_input("أدخل الرقم السري الخاص بالفريق :", type="password")
     if st.button("تسجيل الدخول للنظام"):
         if mot_de_passe == PASSWORD_SECRET:
@@ -26,7 +31,7 @@ if not st.session_state["authentifie"]:
             st.error("الرقم السري غير صحيح.")
     st.stop()
 
-# تفعيل قنوات الذاكرة المستقرة لحماية الملفات والكوغات من الضياع
+# تفعيل قنوات الذاكرة المستقرة لحماية الملفات والكوغات من التداخل والضياع
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -49,8 +54,8 @@ prix_materiaux = {
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 liste_designations_prefere = ["Escalier (درج)", "Plan de cuisine (مطبخ)", "Revêtement de sol (أرضية)", "Plinthe (حزام)", "Seuil de porte (عتبة)", "Autre (كتابة مخصصة)"]
 
-# اللوحة الجانبية
-st.sidebar.markdown("<div class='marble-logo-box' style='padding:10px; margin-bottom:10px;'><div class='marble-m-text' style='font-size:35px;'>M</div></div>", unsafe_allow_html=True)
+# اللوحة الجانبية مع الأعمدة الحديدية المصغرة للهيكل المتين
+st.sidebar.markdown("<div class='industrial-marble-m' style='padding:12px; margin-bottom:10px; gap:6px;'><div class='iron-pillar col-1' style='width:12px; height:45px;'></div><div class='iron-pillar col-2' style='width:12px; height:30px;'></div><div class='iron-pillar col-3' style='width:12px; height:15px;'></div><div class='iron-pillar col-4' style='width:12px; height:30px;'></div><div class='iron-pillar col-5' style='width:12px; height:45px;'></div></div>", unsafe_allow_html=True)
 st.sidebar.markdown("<h3 style='text-align: center; color: #22d3ee; margin-top:0;'>نظام مبيعات دكالة</h3>", unsafe_allow_html=True)
 page = st.sidebar.radio("📋 الانتقال بين الأقسام :", ["📝 تسجيل الطلبيات الجديدة", "🗂️ الأرشيف والبحث الذكي", "🗑️ سلة المهملات (Corbeille)"])
 
@@ -73,7 +78,7 @@ if page == "📝 تسجيل الطلبيات الجديدة":
     with col_info2:
         nom_client = st.text_input("اسم الزبون الحالي :", "Client_Anonyme")
     with col_info3:
-        responsable_commande = st.text_input("المسؤول عن Mتابعة (البائع) :", "الطوسي")
+        responsable_commande = st.text_input("المسؤول عن المتابعة (البائع) :", "الطوسي")
 
     st.markdown("### 🧱 2. مقاسات وأنواع الرخام")
     col_in1, col_in2, col_in3, col_in4 = st.columns(4)
@@ -143,23 +148,4 @@ if page == "📝 تسجيل الطلبيات الجديدة":
 
 # ================= القسم 2 : الأرشيف والبحث الذكي الموحد =================
 elif page == "🗂️ الأرشيف والبحث الذكي":
-    # تم إلغاء نصوص علامات التنصيص الثلاثية وحقنها بأسلوب برمي سليم لمنع الأخطاء نهائياً
-    st.markdown("<div style='background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%); color: #0f172a; padding: 25px; border-radius: 12px; border-left: 8px solid #f59e0b; margin-bottom: 25px;'><h2 style='color:#0f172a !important; text-align:right; margin:0;'>🗂️ نظام إدارة مبيعات دكالة - الفرز الرخامي الذكي</h2><p style='color:#334155 !important; text-align:right;'>هنا تجد كافة الطلبيات المحفوظة منسقة داخل واجهة رخامية كلاسيكية متباينة الألوان لسهولة تامة في القراءة والبحث البصري الحاد والكتابة واضحة.</p></div>", unsafe_allow_html=True)
-
-    if not st.session_state["historique_commandes"]:
-        st.info("الأرشيف فارغ حالياً، قم بتسجيل وتثبيت طلبية أولاً.")
-    else:
-        df_hist = pd.DataFrame(st.session_state["historique_commandes"])
-
-        st.markdown("### 🔍 صندوق البحث السريع والموحد (اكتب اسم البائع الطوسي أو الزبون للفرز الفوري):")
-        recherche = st.text_input("ابحث هنا بالكلمة :", key="search_inside_folder")
-
-        if recherche:
-            req = recherche.lower().strip()
-            cond_dossier = df_hist['N° Dossier'].astype(str).str.lower().str.contains(req, na=False)
-            cond_client = df_hist['Client'].astype(str).str.lower().str.contains(req, na=False)
-            cond_vendeur = df_hist['Responsable'].astype(str).str.lower().str.contains(req, na=False)
-            df_filtered = df_hist[cond_dossier | cond_client | cond_vendeur]
-        else:
-            df_filtered = df_hist
-
+    # [تعديل العبارة التعريفية العامة بالأعلى] لتطابق طراز النظام الرخامي الموحد والسهل للورشة
