@@ -15,7 +15,7 @@ except ImportError:
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
 # ⚠️ À remplacer par votre propre mot de passe sécurisé (idéalement via st.secrets)
-PASSWORD_SECRET = "doukkali2026"
+PASSWORD_SECRET = "2017@2026"
 
 liste_responsables = ["Ahmed", "Youssef", "Sara", "Mohamed"]
 
