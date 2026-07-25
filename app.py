@@ -79,9 +79,10 @@ if page == "📝 Saisie des Commandes":
         responsable_commande = st.selectbox("Responsable du suivi (Vendeur) :", liste_responsables, index=0)
 
     st.header("📊 Tableau des Articles (Style Excel)")
+
+    # تحويل البيانات إلى داتا فريم للقراءة
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
 
-    # تحرير الجدول وحفظ البيانات بشكل آمن في الذاكرة الحية
     edited_df = st.data_editor(
         df_form,
         num_rows="dynamic",
@@ -96,12 +97,10 @@ if page == "📝 Saisie des Commandes":
         }
     )
 
-    # تفعيل المزامنة المباشرة لمنع فقدان البيانات المدخلة قبل ضغط الأزرار
-    st.session_state["lignes_commande"] = edited_df.to_dict(orient="records")
-
     panier_final = []
     total_ht = 0.0
 
+    # معالجة وحساب أسطر الجدول بدقة تامة وضمان عدم اختفائها
     for idx, row in edited_df.iterrows():
         des = str(row.get("Désignation", "Nouvel article")).strip()
         if des == "" or pd.isna(row.get("Désignation")): des = "Nouvel article"
@@ -162,16 +161,31 @@ if page == "📝 Saisie des Commandes":
         if st.button("💾 Enregistrer la commande dans le système"):
             date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             id_commande = f"CMD-{random.randint(10000, 99999)}"
+
+            # [إصلاح حاسم للتسجيل الإجباري الدائم]
             for item in panier_final:
-                st.session_state["historique_commandes"].append({
-                    "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": label_fichier,
-                    "Client": nom_client, "Responsable": responsable_commande, "Désignation": item["designation"],
-                    "Matériau": item["materiau"], "Dimensions": item["dimensions"], "Quantité": item["quantite"],
-                    "Surface (m2)": item["surface"], "Total Ligne HT (DH)": item["total"],
-                    "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
-                    "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
-                })
-            st.success("La commande a été enregistrée avec succès في الأرشيف !")
+                nouvelle_ligne = {
+                    "ID unique": id_commande,
+                    "Date Commande": date_actuelle,
+                    "N° Dossier": label_fichier,
+                    "Client": nom_client,
+                    "Responsable": responsable_commande,
+                    "Désignation": item["designation"],
+                    "Matériau": item["materiau"],
+                    "Dimensions": item["dimensions"],
+                    "Quantité": item["quantite"],
+                    "Surface (m2)": item["surface"],
+                    "Total Ligne HT (DH)": item["total"],
+                    "Total HT Commande (DH)": round(total_ht, 2),
+                    "Total TTC (DH)": round(total_net, 2),
+                    "Avance (DH)": round(avance, 2),
+                    "Reste (DH)": round(reste_a_payer, 2)
+                }
+                st.session_state["historique_commandes"].append(nouvelle_ligne)
+
+            # تثبيت المدخلات الحالية لمنع المسح التلقائي
+            st.session_state["lignes_commande"] = edited_df.to_dict(orient="records")
+            st.success("✅ La commande a été enregistrée avec succès في الأرشيف !")
 
     with col_btn2:
         if panier_final:
@@ -208,15 +222,7 @@ if page == "📝 Saisie des Commandes":
                 mime="text/html", use_container_width=True
             )
 
-# ================= PAGE 2 : HISTORIQUE & RECHERCHE (نظام المجلدات المعدل) =================
+# ================= PAGE 2 : HISTORIQUE & RECHERCHE =================
 elif page == "🗂️ Historique & Recherche":
     st.title("🗂️ Historique & Recherche (Système de Dossiers)")
-
-    if not st.session_state["historique_commandes"]:
-        st.info("Aucune commande n'est encore enregistrée dans le système.")
-    else:
-        df_hist = pd.DataFrame(st.session_state["historique_commandes"])
-
-        st.markdown("### 📂 Choisissez un dossier (إختر مجلد المسؤول):")
-        list_dossiers_resp = sorted(list(df_hist['Responsable'].unique()))
 
