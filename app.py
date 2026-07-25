@@ -55,6 +55,7 @@ if st.sidebar.button("🔒 تسجيل الخروج"):
     st.session_state["authentifie"] = False
     st.rerun()
 
+# ================= القسم 1 : تسجيل الطلبيات الجديدة =================
 if page == "📝 تسجيل الطلبيات الجديدة":
     st.markdown("<h1>📝 تدوين وتسجيل الطلبيات الجديدة</h1>", unsafe_allow_html=True)
     if st.button("🆕 ملف جديد (تفريغ الاستمارة)"):
@@ -123,6 +124,5 @@ if page == "📝 تسجيل الطلبيات الجديدة":
             st.success("✅ تم حفظ وتأمين الملف بنجاح في الأرشيف الموحد!")
             st.rerun()
 
+# ================= القسم 2 : الأرشيف والبحث الذكي الموحد =================
 elif page == "🗂️ الأرشيف والبحث الذكي":
-    st.markdown("<div class='marble-panel'><h2 style='color:#0f172a !important; text-align:right; margin:0;'>🗂️ نظام إدارة مبيعات دكالة - الفرز الرخامي الذكي</h2><p style='color:#334155 !important; text-align:right;'>مرحباً بك في لوحة الأرشيف والبحث الموحد. هنا تجد كافة الطلبيات المحفوظة منسقة داخل واجهة رخامية كلاسيكية متباينة الألوان لسهولة تامة في القراءة والبحث البصري الحاد والكتابة واضحة.</p></div>", unsafe_allow_html=True)
-    if not st.session_state["historique_commandes"]:
