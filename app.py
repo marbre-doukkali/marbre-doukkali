@@ -314,24 +314,30 @@ elif page == NOM_PAGE_ARCHIVE:
                 df_details_cmd = pd.DataFrame(cmd_info["Details"])
                 st.dataframe(df_details_cmd, use_container_width=True)
 
-                # Choix automatique du moteur Excel disponible (corrige ModuleNotFoundError: xlsxwriter)
-                try:
-                    import xlsxwriter  # noqa: F401
-                    moteur_excel = "xlsxwriter"
-                except ImportError:
-                    moteur_excel = "openpyxl"
-
-                buffer = io.BytesIO()
-                with pd.ExcelWriter(buffer, engine=moteur_excel) as writer:
-                    df_details_cmd.to_excel(writer, sheet_name="تفاصيل القياسات", index=False)
+                # Choix automatique du moteur Excel disponible + capture de toute erreur d'exécution
+                buffer = None
+                erreur_excel = None
+                for moteur_essai in ("xlsxwriter", "openpyxl"):
+                    try:
+                        buffer_essai = io.BytesIO()
+                        with pd.ExcelWriter(buffer_essai, engine=moteur_essai) as writer:
+                            df_details_cmd.to_excel(writer, sheet_name="تفاصيل القياسات", index=False)
+                        buffer = buffer_essai
+                        break
+                    except Exception as e:
+                        erreur_excel = str(e)
+                        continue
                 col_dl, col_print = st.columns(2)
                 with col_dl:
-                    st.download_button(
-                        label="📥 تحميل كشف القياسات بصيغة Excel",
-                        data=buffer.getvalue(),
-                        file_name=f"كشف_حساب_الملف_{fichier_selectionne}.xlsx",
-                        mime="application/vnd.ms-excel"
-                    )
+                    if buffer:
+                        st.download_button(
+                            label="📥 تحميل كشف القياسات بصيغة Excel",
+                            data=buffer.getvalue(),
+                            file_name=f"كشف_حساب_الملف_{fichier_selectionne}.xlsx",
+                            mime="application/vnd.ms-excel"
+                        )
+                    else:
+                        st.warning(f"⚠️ تصدير Excel غير متوفر حالياً (المكتبة معطوبة أو غير متوافقة مع Python الحالي). التفاصيل: {erreur_excel}")
                 with col_print:
                     if st.button("🖨️ طباعة الفاتورة"):
                         html_recu = construire_recu_html(cmd_info, df_details_cmd)
