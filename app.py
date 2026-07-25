@@ -16,10 +16,7 @@ if "authentifie" not in st.session_state:
     st.session_state["authentifie"] = False
 
 if not st.session_state["authentifie"]:
-    # عرض أعمدة البنايات الحديدية الصلبة التي تشكل حرف M الهيكلي في صفحة الدخول
     st.markdown("<div class='industrial-marble-m'><div class='iron-pillar col-1'></div><div class='iron-pillar col-2'></div><div class='iron-pillar col-3'></div><div class='iron-pillar col-4'></div><div class='iron-pillar col-5'></div></div>", unsafe_allow_html=True)
-
-    # [تعديل كلمة الترحيب في البداية] لتصبح رسمية واحترافية تماماً كما اتفقنا
     st.markdown("<div class='industrial-title'>مرحباً بك في نظام المبيعات الخاص برخام دكالة</div>", unsafe_allow_html=True)
 
     mot_de_passe = st.text_input("أدخل الرقم السري الخاص بالفريق :", type="password")
@@ -148,4 +145,3 @@ if page == "📝 تسجيل الطلبيات الجديدة":
 
 # ================= القسم 2 : الأرشيف والبحث الذكي الموحد =================
 elif page == "🗂️ الأرشيف والبحث الذكي":
-    # [تعديل العبارة التعريفية العامة بالأعلى] لتطابق طراز النظام الرخامي الموحد والسهل للورشة
