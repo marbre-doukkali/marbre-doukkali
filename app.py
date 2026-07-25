@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. إعدادات وتأمين الهوية البصرية الرخامية الفاخرة لورشة دكالة
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
-# تصميم الـ CSS الجديد: تحويل الصفحة الثانية والأرشيف إلى طراز الرخام الأبيض والأسود الفخم مع كتابة فائقة الوضوح
+# تصميم الـ CSS: تحويل الأرشيف إلى طراز الرخام الأبيض الفخم مع كتابة فائقة الوضوح
 st.markdown("""
     <style>
     /* المظهر العام المستوحى من عروق الرخام الأسود والداكن الفخم */
@@ -33,7 +33,7 @@ st.markdown("""
         text-shadow: 2px 2px 4px #000000;
     }
 
-    /* [الديزاين الجديد] واجهة رخامية كلاسيكية متباينة جداً للصفحة الثانية والأرشيف */
+    /* واجهة رخامية كلاسيكية متباينة جداً للصفحة الثانية والأرشيف */
     .marble-panel {
         background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
         background-image: radial-gradient(rgba(148,163,184,0.15) 1px, transparent 0);
@@ -47,7 +47,7 @@ st.markdown("""
     }
 
     /* كتابة واضحة ومتباينة جداً داخل لوحة الرخام الأبيض */
-    .marble-panel h3, .marble-panel p, .marble-panel label {
+    .marble-panel h2, .marble-panel p {
         color: #0f172a !important;
         font-weight: bold !important;
     }
@@ -144,7 +144,7 @@ if page == "📝 تسجيل الطلبيات الجديدة":
     with col_info1:
         label_fichier = st.text_input("N° Dossier / رقم الملف :", "DOS-2026-001")
     with col_info2:
-        nom_client = st.text_input("اسم الزبون الحالي :", "Client_Anonymه")
+        nom_client = st.text_input("اسم الزبون الحالي :", "Client_Anonyme")
     with col_info3:
         responsable_commande = st.text_input("المسؤول عن المتابعة (البائع) :", "الطوسي")
 
@@ -178,7 +178,6 @@ if page == "📝 تسجيل الطلبيات الجديدة":
         df_panier = pd.DataFrame(st.session_state["panier_actuel"])
         st.dataframe(df_panier, use_container_width=True)
 
-        # [إصلاح ميكانيكي لمنع الرمي الكلي للملف] حذف معلومة أو قطعة واحدة فقط من الاستمارة قبل الحفظ
         st.markdown("##### 🛠️ تعديل محتوى الاستمارة (حذف قطعة معينة فقط بدلاً من رمي الملف الكلي):")
         index_a_supprimer = st.number_input("أدخل رقم السطر المراد حذفه من الجدول أعلاه (يبدأ من 0) :", min_value=0, max_value=len(st.session_state["panier_actuel"])-1, step=1)
         if st.button("❌ حذف هذه القطعة المحددة فقط"):
@@ -215,6 +214,9 @@ if page == "📝 تسجيل الطلبيات الجديدة":
             st.success("✅ تم حفظ وتأمين الملف بنجاح في الأرشيف الموحد!")
             st.rerun()
 
-# ================= القسم 2 : الأرشيف والبحث الذكي الموحد (الديزاين الرخامي المكتمل) =================
+# ================= القسم 2 : الأرشيف والبحث الذكي الموحد =================
 elif page == "🗂️ الأرشيف والبحث الذكي":
-    # تطبيق تأثير اللوحة الرخامية البيضاء ذات التباين العالي والكتابة الواضحة جداً
+    # تم إصلاح المسافات البادئة (Indentation) هنا بدقة تامة لتفادي الـ Script execution error
+    st.markdown("""
+        <div class='marble-panel'>
+            <h2 style='color:#0f172a !important; text-align:right; margin:0;'>🗂️ نظام إدارة مبيعات دكالة - الفرز الرخامي الذكي</h2>
