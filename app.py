@@ -24,7 +24,7 @@ if not st.session_state["authentifie"]:
             st.error("Mot de passe incorrect.")
     st.stop()
 
-# 2. Base de données الصلبة المحدثة بصيغة CSV لمنع كراش عدم تثبيت الموديلات
+# 2. Base de données الصلبة المستقرة بصيغة CSV لمنع كراش الموديلات واختفاء البيانات
 DB_FILE = "database_marbre.csv"
 TRASH_FILE = "database_trash.csv"
 
@@ -108,8 +108,12 @@ if page == "📝 Saisie des Commandes":
         tot_ligne = surf * p_m2
 
         st.session_state["panier_actuel"].append({
-            "Désignation": input_des, "Matériau": input_mat.upper(), "Dimensions": f"{input_long}x{input_larg}",
-            "Quantité": input_qte, "Surface (m2)": round(surf, 2), "Total HT (DH)": round(tot_ligne, 2)
+            "Désignation": input_des,
+            "Matériau": input_mat.upper(),
+            "Dimensions": f"{input_long}x{input_larg}",
+            "Quantité": input_qte,
+            "Surface (m2)": round(surf, 2),
+            "Total HT (DH)": round(tot_ligne, 2)
         })
         st.success("Article ajouté au dossier !")
 
@@ -141,20 +145,31 @@ if page == "📝 Saisie des Commandes":
 
             historique_total = charger_depot(DB_FILE)
 
+            # تم إصلاح مسميات المفاتيح هنا لتطابق مخرجات الجدول بدقة وتمنع الـ KeyError
             for item in st.session_state["panier_actuel"]:
                 historique_total.append({
-                    "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": label_fichier,
-                    "Client": nom_client, "Responsable": responsable_commande, "Désignation": item["Désignation"],
-                    "Matériau": item["Matériau"], "Dimensions": item["Dimensions"], "Quantité": item["Quantité"],
-                    "Surface (m2)": item["Surface (m2)"], "Total Ligne HT (DH)": item["Total Ligne HT (DH)"],
-                    "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
-                    "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
+                    "ID unique": id_commande,
+                    "Date Commande": date_actuelle,
+                    "N° Dossier": label_fichier,
+                    "Client": nom_client,
+                    "Responsable": responsable_commande,
+                    "Désignation": item["Désignation"],
+                    "Matériau": item["Matériau"],
+                    "Dimensions": item["Dimensions"],
+                    "Quantité": item["Quantité"],
+                    "Surface (m2)": item["Surface (m2)"],
+                    "Total Ligne HT (DH)": item["Total HT (DH)"],
+                    "Total HT Commande (DH)": round(total_ht, 2),
+                    "Total TTC (DH)": round(total_net, 2),
+                    "Avance (DH)": round(avance, 2),
+                    "Reste (DH)": round(reste_a_payer, 2)
                 })
 
             sauvegarder_depot(historique_total, DB_FILE)
             st.session_state["historique_commandes"] = historique_total
             st.session_state["panier_actuel"] = []
-            st.success(f"✅ تم حفظ الملف بنجاح وتثبيته في الأرشيف!")
+            st.success("✅ تم حفظ الملف بنجاح وتثبيته في الأرشيف الموحد!")
+            st.rerun()
 
 # ================= PAGE 2 : HISTORIQUE & RECHERCHE =================
 elif page == "🗂️ Historique & Recherche":
@@ -189,7 +204,7 @@ elif page == "🗂️ Historique & Recherche":
 
         if st.button("❌ Envoyer à la corbeille"):
             lignes_a_conserver = [c for c in st.session_state["historique_commandes"] if str(c["N° Dossier"]) != str(dossier_a_supprimer)]
-            lignes_a_supprimer = [c for c in st.session_state["historique_commandes"] if str(c["N° Dossier"]) == str(dossier_a_supprimer)]
+            lignes_a_supprimer = [c for c in st.session_state["historique_commandes"] if str(c["N% Dossier"]) == str(dossier_a_supprimer) or str(c["N° Dossier"]) == str(dossier_a_supprimer)]
 
             corbeille_totale = charger_depot(TRASH_FILE)
             corbeille_totale.extend(lignes_a_supprimer)
@@ -202,7 +217,6 @@ elif page == "🗂️ Historique & Recherche":
             st.success("Dossier envoyé à la corbeille !")
             st.rerun()
 
-        # تصدير البيانات إلى ملف CSV آمن ومضمون وسريع بدون مكتبات خارجية
         csv_data = df_filtered.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📊 Exporter l'historique vers CSV (Excel)",
@@ -212,12 +226,3 @@ elif page == "🗂️ Historique & Recherche":
             use_container_width=True
         )
 
-# ================= PAGE 3 : CORBEILLE =================
-else:
-    st.title("🗑️ Corbeille des dossiers supprimés")
-    st.session_state["corbeille_commandes"] = charger_depot(TRASH_FILE)
-
-    if not st.session_state["corbeille_commandes"]:
-        st.info("La corbeille est vide.")
-    else:
-        df_corb = pd.DataFrame(st.session_state["corbeille_commandes"])
