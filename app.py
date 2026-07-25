@@ -14,7 +14,7 @@ except ImportError:
 # 1. إعداد الصفحة وتخصيص المظهر الصناعي لشركة رخام دكالة
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
-# تخصيص الـ CSS وبناء تصميم هندسي متصل وحقيقي لحرف M صناعي فخم
+# تخصيص الـ CSS وبناء تصميم هندسي مزخرف وحقيقي لحرف M بألوان متعددة ومتداخلة
 st.markdown("""
 <style>
 .stApp {
@@ -24,33 +24,62 @@ st.markdown("""
     color: #ffffff;
     font-family: 'Segoe UI', sans-serif;
 }
-/* حاوية مخصصة لربط الأعمدة هندسياً لتشكيل حرف M */
+/* حاوية حرف M الهندسية المزخرفة */
 .industrial-marble-m {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 40px;
-    background: linear-gradient(180deg, #1f2937 0%, #030712 100%);
+    align-items: center;
+    height: 180px;
+    padding: 20px;
+    background: linear-gradient(180deg, #111827 0%, #030712 100%);
     border: 2px solid #4b5563;
     border-radius: 12px;
     margin-bottom: 30px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
-.iron-pillar {
-    width: 38px;
-    background: linear-gradient(90deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%);
-    border: 2px solid #64748b;
-    border-radius: 4px;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.6), inset -3px -3px 6px rgba(0,0,0,0.4);
-    transition: all 0.3s ease;
+/* الهيكل البنائي المتصل لرسم الـ M الحقيقي بزوايا مائلة وألوان متعددة */
+.m-letter-container {
+    display: flex;
+    align-items: flex-start;
+    height: 140px;
+    position: relative;
 }
-/* الأطوال الرقمية الدقيقة لرسم خطوط حرف M هندسياً من الأعلى للأسفل */
-.col-1 { height: 160px; }
-.col-2 { height: 70px; margin-top: 15px; background: linear-gradient(90deg, #94a3b8 0%, #475569 100%); }
-.col-3 { height: 110px; margin-top: 40px; background: linear-gradient(90deg, #64748b 0%, #1e293b 100%); }
-.col-4 { height: 70px; margin-top: 15px; background: linear-gradient(90deg, #94a3b8 0%, #475569 100%); }
-.col-5 { height: 160px; }
+.m-leg {
+    width: 24px;
+    height: 140px;
+    border-radius: 4px;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+}
+/* ألوان الطيف الرخامي والجرانيتي المزخرف */
+.leg-left {
+    background: linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%); /* تدرج ذهبي ملكي */
+    border: 1px solid #f59e0b;
+}
+.leg-right {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%); /* تدرج أزرق Labrador */
+    border: 1px solid #3b82f6;
+}
+.m-diagonal {
+    width: 22px;
+    height: 110px;
+    margin-top: 5px;
+    border-radius: 4px;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+}
+.diag-left {
+    transform: rotate(28deg);
+    transform-origin: top left;
+    margin-left: 8px;
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%); /* تدرج أحمر عقيق */
+    border: 1px solid #ef4444;
+}
+.diag-right {
+    transform: rotate(-28deg);
+    transform-origin: top right;
+    margin-right: 8px;
+    background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 100%); /* تدرج أخضر جواتيمالا */
+    border: 1px solid #10b981;
+}
 
 .industrial-title {
     font-size: 30px;
@@ -113,9 +142,21 @@ if "lignes_commande" not in st.session_state:
         {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
     ]
 
-# بوابة حماية الدخول بهيكل حرف M المتناسق والجميل
+# شفرة HTML نقية لرسم وتجسيد حرف M المزخرف بـ 4 ألوان فخمة في واجهة الدخول
+html_m_rendering = """
+<div class='industrial-marble-m'>
+    <div class='m-letter-container'>
+        <div class='m-leg leg-left'></div>
+        <div class='m-diagonal diag-left'></div>
+        <div class='m-diagonal diag-right'></div>
+        <div class='m-leg leg-right'></div>
+    </div>
+</div>
+"""
+
+# بوابة حماية الدخول بهيكل حرف M المطور والمزخرف بالألوان
 if not st.session_state["authentifie"]:
-    st.markdown("<div class='industrial-marble-m'><div class='iron-pillar col-1'></div><div class='iron-pillar col-2'></div><div class='iron-pillar col-3'></div><div class='iron-pillar col-4'></div><div class='iron-pillar col-5'></div></div>", unsafe_allow_html=True)
+    st.markdown(html_m_rendering, unsafe_allow_html=True)
     st.markdown("<div class='industrial-title'>مرحباً بك في نظام إدارة ومبيعات رخام دكالة</div>", unsafe_allow_html=True)
     mot_de_passe = st.text_input("أدخل الرقم السري الخاص بالفريق المعني :", type="password")
     if st.button("تسجيل الدخول للنظام الآمن"):
@@ -141,8 +182,8 @@ prix_materiaux = {
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 liste_responsables = ["الطوسي (El Tossi)", "Nadim Jadoui", "Responsable Standard"]
 
-# قائمة الانتقال الجانبية مع حرف M المصغر والأنيق
-st.sidebar.markdown("<div class='industrial-marble-m' style='padding:12px; margin-bottom:10px; gap:4px;'><div class='iron-pillar col-1' style='width:10px; height:45px;'></div><div class='iron-pillar col-2' style='width:10px; height:18px; margin-top:4px;'></div><div class='iron-pillar col-3' style='width:10px; height:30px; margin-top:12px;'></div><div class='iron-pillar col-4' style='width:10px; height:18px; margin-top:4px;'></div><div class='iron-pillar col-5' style='width:10px; height:45px;'></div></div>", unsafe_allow_html=True)
+# القائمة الجانبية يظهر في أعلاها نفس التصميم المطور والمزخرف لحرف M
+st.sidebar.markdown(html_m_rendering.replace("height: 180px;", "height: 110px; padding: 5px;").replace("height: 140px;", "height: 80px;").replace("height: 140px;", "height: 80px;").replace("height: 110px;", "height: 60px;"), unsafe_allow_html=True)
 st.sidebar.markdown("<h3 style='text-align: center; color: #ffffff; margin-top:0;'>نظام مبيعات دكالة</h3>", unsafe_allow_html=True)
 page = st.sidebar.radio("Navigation", ["📝 Saisie des Commandes", "🗂️ Historique & Recherche", "🗑️ Corbeille (سلة المهملات)"])
 
@@ -233,11 +274,7 @@ if page == "📝 Saisie des Commandes":
     total_net = total_ttc - montant_remise
     reste_a_payer = total_net - avance
 
-    # بناء القالب بأمان تام وفصل الرموز الخاصة المسببة للمشاكل
     panel_html = "<div class='marble-panel'>"
     panel_html += "<h3 style='color:#0f172a !important; border-bottom:2px solid #0f172a;'>🧾 الملخص المالي والتركيب الفني</h3>"
     panel_html += f"<p>💰 TOTAL HT : <b>{total_ht:,.2f} DH</b></p>"
     panel_html += f"<p>📈 TOTAL TTC (HT x 1.2) : <b>{total_ttc:,.2f} DH</b></p>"
-    panel_html += f"<p>📉 Montant Remise : <b>{montant_remise:,.2f} DH ({remise:,.1f} Pourcent)</b></p>"
-    panel_html += f"<p>⭐ TOTAL NET À PAYER : <span style='font-size:18px; color:#15803d;'><b>{total_net:,.2f} DH</b></span></p>"
-    panel_html += f"<p>💵 Avance : <b>{avance:,.2f} DH</b></p>"
