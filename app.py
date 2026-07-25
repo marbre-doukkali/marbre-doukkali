@@ -27,7 +27,6 @@ if not st.session_state["authentifie"]:
             st.error("الرقم السري غير صحيح.")
     st.stop()
 
-# تفعيل قنوات الذاكرة المستقرة لحماية الملفات والكوغات من التداخل والضياع
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -50,7 +49,6 @@ prix_materiaux = {
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 liste_designations_prefere = ["Escalier (درج)", "Plan de cuisine (مطبخ)", "Revêtement de sol (أرضية)", "Plinthe (حزام)", "Seuil de porte (عتبة)", "Autre (كتابة مخصصة)"]
 
-# اللوحة الجانبية مع الأعمدة الحديدية المصغرة للهيكل المتين
 st.sidebar.markdown("<div class='industrial-marble-m' style='padding:12px; margin-bottom:10px; gap:6px;'><div class='iron-pillar col-1' style='width:12px; height:45px;'></div><div class='iron-pillar col-2' style='width:12px; height:30px;'></div><div class='iron-pillar col-3' style='width:12px; height:15px;'></div><div class='iron-pillar col-4' style='width:12px; height:30px;'></div><div class='iron-pillar col-5' style='width:12px; height:45px;'></div></div>", unsafe_allow_html=True)
 st.sidebar.markdown("<h3 style='text-align: center; color: #22d3ee; margin-top:0;'>نظام مبيعات دكالة</h3>", unsafe_allow_html=True)
 page = st.sidebar.radio("📋 الانتقال بين الأقسام :", ["📝 تسجيل الطلبيات الجديدة", "🗂️ الأرشيف والبحث الذكي", "🗑️ سلة المهملات (Corbeille)"])
@@ -113,7 +111,6 @@ if page == "📝 تسجيل الطلبيات الجديدة":
         reste_a_payer = total_net - avance
         st.markdown(f"#### الصافي المطلوب دفعه : {total_net:.2f} DH | المتبقي : {reste_a_payer:.2f} DH")
 
-        # [تأمين أزرار الإجراءات للطباعة والحفظ المتوازي]
         col_act1, col_act2 = st.columns(2)
         with col_act1:
             if st.button("💾 ENREGISTRER DEFINITIVEMENT DANS L'HISTORIQUE"):
@@ -130,3 +127,7 @@ if page == "📝 تسجيل الطلبيات الجديدة":
                     })
                 st.session_state["panier_actuel"] = []
                 st.success("✅ تم حفظ وتأمين الملف بنجاح في الأرشيف الموحد!")
+                st.rerun()
+
+        with col_act2:
+            # [إرجاع كود وتصميم نظام الطباعة القديم والأصيل من أول شفرة برمجية بالكامل]
