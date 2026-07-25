@@ -38,17 +38,15 @@ prix_materiaux = {
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 liste_responsables = ["الطوسي (El Tossi)", "Nadim Jadoui", "Responsable Standard"]
 
-# إعداد الذاكرة الدائمة وضمان حماية سلة المهملات والأرشيف من الضياع
+# قنوات الذاكرة الدائمة المحمية
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
 if "corbeille_commandes" not in st.session_state:
     st.session_state["corbeille_commandes"] = []
 
-if "lignes_commande" not in st.session_state:
-    st.session_state["lignes_commande"] = [
-        {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
-    ]
+if "panier_actuel" not in st.session_state:
+    st.session_state["panier_actuel"] = []
 
 # Navigation de l'ERP
 st.sidebar.title("Ⓜ️ Menu Marbrerie")
@@ -58,17 +56,15 @@ if st.sidebar.button("🔒 Se déconnecter"):
     st.session_state["authentifie"] = False
     st.rerun()
 
-# ================= PAGE 1 : SAISIE DES COMMANDES =================
+# ================= PAGE 1 : SAISIE DES COMMANDES (نظام الإدخال المضمون الجديد) =================
 if page == "📝 Saisie des Commandes":
     st.title("📝 Gestion et Création des Commandes")
 
-    if st.button("🆕 Nouveau Dossier (Vider le formulaire)"):
-        st.session_state["lignes_commande"] = [
-            {"Désignation": "Escalier", "Matériau": "marmer", "Longueur (m)": 1.00, "Largeur (m)": 0.30, "Quantité": 1}
-        ]
+    if st.button("🆕 Nouveau Dossier (Vider tout)"):
+        st.session_state["panier_actuel"] = []
         st.rerun()
 
-    st.header("📂 Informations du Dossier actuel")
+    st.header("📂 1. Informations du Dossier")
     col_info1, col_info2, col_info3 = st.columns(3)
 
     with col_info1:
@@ -78,151 +74,142 @@ if page == "📝 Saisie des Commandes":
     with col_info3:
         responsable_commande = st.selectbox("Responsable du suivi (Vendeur) :", liste_responsables, index=0)
 
-    st.header("📊 Tableau des Articles (Style Excel)")
+    # حلاً للمشكلة: استمارة إدخال صلبة ومستقلة لإضافة الرخام قطعة قطعة بدون مسح
+    st.header("🧱 2. Ajouter un Article (إضافة قطعة رخام أو جرانيت)")
+    col_in1, col_in2, col_in3, col_in4 = st.columns(4)
 
-    # تحويل البيانات إلى داتا فريم للقراءة
-    df_form = pd.DataFrame(st.session_state["lignes_commande"])
+    with col_in1:
+        input_des = st.text_input("Désignation (مثال: Escalier, Plan de cuisine) :", "Escalier")
+    with col_in2:
+        input_mat = st.selectbox("Matériau (إختر نوع الرخام) :", liste_options_materiaux)
+    with col_in3:
+        input_long = st.number_input("Longueur (m) :", min_value=0.01, value=1.00, step=0.01)
+    with col_in4:
+        input_larg = st.number_input("Largeur (m) :", min_value=0.01, value=0.30, step=0.01)
 
-    edited_df = st.data_editor(
-        df_form,
-        num_rows="dynamic",
-        use_container_width=True,
-        key="editor_commande_unique_key",
-        column_config={
-            "Matériau": st.column_config.SelectboxColumn(
-                "Matériau",
-                options=liste_options_materiaux,
-                required=True
-            )
-        }
-    )
+    input_qte = st.number_input("Quantité :", min_value=1, value=1, step=1)
 
-    panier_final = []
-    total_ht = 0.0
-
-    # معالجة وحساب أسطر الجدول بدقة تامة وضمان عدم اختفائها
-    for idx, row in edited_df.iterrows():
-        des = str(row.get("Désignation", "Nouvel article")).strip()
-        if des == "" or pd.isna(row.get("Désignation")): des = "Nouvel article"
-        mat = str(row.get("Matériau", "marmer")).strip()
-        if mat == "" or pd.isna(row.get("Matériau")): mat = "marmer"
-
-        try:
-            long = float(row.get("Longueur (m)", 1.00))
-            if long <= 0 or pd.isna(long): long = 1.00
-        except: long = 1.00
-        try:
-            larg = float(row.get("Largeur (m)", 0.30))
-            if larg <= 0 or pd.isna(larg): larg = 0.30
-        except: larg = 0.30
-        try:
-            qte = int(row.get("Quantité", 1))
-            if qte <= 0 or pd.isna(qte): qte = 1
-        except: qte = 1
-
-        p_m2 = prix_materiaux.get(mat.lower(), 600)
-        surf = long * larg * qte
+    if st.button("➕ Ajouter cet article au dossier (إضافة للجدول)"):
+        p_m2 = prix_materiaux.get(input_mat, 600)
+        surf = input_long * input_larg * input_qte
         tot_ligne = surf * p_m2
-        total_ht += tot_ligne
 
-        panier_final.append({
-            "designation": des, "materiau": mat.upper(), "dimensions": f"{long}x{larg}",
-            "quantite": qte, "surface": round(surf, 2), "total": round(tot_ligne, 2)
+        st.session_state["panier_actuel"].append({
+            "Désignation": input_des,
+            "Matériau": input_mat.upper(),
+            "Dimensions": f"{input_long}x{input_larg}",
+            "Quantité": input_qte,
+            "Surface (m2)": round(surf, 2),
+            "Total HT (DH)": round(tot_ligne, 2)
         })
+        st.success("Article ajouté au tableau !")
 
-    st.header("🧮 Synthèse Financière")
-    total_ttc = total_ht * 1.2
+    # عرض السلع المضافة حالياً إن وجدت
+    if st.session_state["panier_actuel"]:
+        st.header("📊 Articles dans ce dossier")
+        df_panier = pd.DataFrame(st.session_state["panier_actuel"])
+        st.dataframe(df_panier, use_container_width=True)
 
-    col_f1, col_f2 = st.columns(2)
-    with col_f1:
-        st.subheader(f"TOTAL HT : {total_ht:.2f} DH")
-        st.subheader(f"TOTAL TTC (HT x 1.2) : {total_ttc:.2f} DH")
+        total_ht = df_panier["Total HT (DH)"].sum()
+        total_ttc = total_ht * 1.2
 
-    col_finance1, col_finance2 = st.columns(2)
-    with col_finance1:
-        remise = st.number_input("Remise globale (%)", min_value=0.0, max_value=100.0, value=0.0)
-    with col_finance2:
-        avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
+        st.header("🧮 Synthèse Financière")
+        st.subheader(f"TOTAL HT : {total_ht:.2f} DH | TOTAL TTC : {total_ttc:.2f} DH")
 
-    montant_remise = total_ttc * (remise / 100)
-    total_net = total_ttc - montant_remise
-    reste_a_payer = total_net - avance
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            remise = st.number_input("Remise globale (%)", min_value=0.0, max_value=100.0, value=0.0)
+        with col_f2:
+            avance = st.number_input("Somme d'avance versée (DH)", min_value=0.0, value=0.0)
 
-    st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
-    st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
+        montant_remise = total_ttc * (remise / 100)
+        total_net = total_ttc - montant_remise
+        reste_a_payer = total_net - avance
 
-    if reste_a_payer > 0:
-        st.warning(f"Reste à payer : {reste_a_payer:.2f} DH")
-    else:
-        st.success("Facture Entièrement Payée")
+        st.markdown(f"**Montant Remise :** {montant_remise:.2f} DH")
+        st.subheader(f"TOTAL NET À PAYER : {total_net:.2f} DH")
 
-    col_btn1, col_btn2 = st.columns(2)
-    with col_btn1:
-        if st.button("💾 Enregistrer la commande dans le système"):
-            date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            id_commande = f"CMD-{random.randint(10000, 99999)}"
+        if reste_a_payer > 0:
+            st.warning(f"Reste à payer : {reste_a_payer:.2f} DH")
+        else:
+            st.success("Facture Entièrement Payée")
 
-            # [إصلاح حاسم للتسجيل الإجباري الدائم]
-            for item in panier_final:
-                nouvelle_ligne = {
-                    "ID unique": id_commande,
-                    "Date Commande": date_actuelle,
-                    "N° Dossier": label_fichier,
-                    "Client": nom_client,
-                    "Responsable": responsable_commande,
-                    "Désignation": item["designation"],
-                    "Matériau": item["materiau"],
-                    "Dimensions": item["dimensions"],
-                    "Quantité": item["quantite"],
-                    "Surface (m2)": item["surface"],
-                    "Total Ligne HT (DH)": item["total"],
-                    "Total HT Commande (DH)": round(total_ht, 2),
-                    "Total TTC (DH)": round(total_net, 2),
-                    "Avance (DH)": round(avance, 2),
-                    "Reste (DH)": round(reste_a_payer, 2)
-                }
-                st.session_state["historique_commandes"].append(nouvelle_ligne)
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button("💾 Enregistrer DEFINITIVEMENT dans l'historique"):
+                date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                id_commande = f"CMD-{random.randint(10000, 99999)}"
 
-            # تثبيت المدخلات الحالية لمنع المسح التلقائي
-            st.session_state["lignes_commande"] = edited_df.to_dict(orient="records")
-            st.success("✅ La commande a été enregistrée avec succès في الأرشيف !")
+                for item in st.session_state["panier_actuel"]:
+                    st.session_state["historique_commandes"].append({
+                        "ID unique": id_commande, "Date Commande": date_actuelle, "N° Dossier": label_fichier,
+                        "Client": nom_client, "Responsable": responsable_commande, "Désignation": item["Désignation"],
+                        "Matériau": item["Matériau"], "Dimensions": item["Dimensions"], "Quantité": item["Quantité"],
+                        "Surface (m2)": item["Surface (m2)"], "Total Ligne HT (DH)": item["Total HT (DH)"],
+                        "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
+                        "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
+                    })
+                st.success(f"✅ تم تسجيل ملف {nom_client} بنجاح في مجلد {responsable_commande}!")
+                st.session_state["panier_actuel"] = [] # تفريغ بعد الحفظ الناجح
 
-    with col_btn2:
-        if panier_final:
-            df_items = pd.DataFrame(panier_final)
-            df_items.columns = ["Désignation", "Matériau", "Dimensions", "Quantité", "Surface (m2)", "Total HT (DH)"]
-
-            html_invoice = '<html><head><meta charset="utf-8">'
-            html_invoice += '<style>table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left; padding: 6px; font-family: Arial; }</style>'
-            html_invoice += '</head><body>'
-            html_invoice += '<table><tr><td style="border:none; font-size:16px; font-weight:bold; color:#1f4e78;">MARBRE DOUKKALI</td></tr></table><br>'
-            html_invoice += '<h2>BON DE COMMANDE - MARBRERIE</h2>'
-            html_invoice += '<table>'
-            html_invoice += f'<tr><td><b>N° Dossier</b></td><td>{label_fichier}</td></tr>'
-            html_invoice += f'<tr><td><b>Client</b></td><td>{nom_client}</td></tr>'
-            html_invoice += f'<tr><td><b>Responsable</b></td><td>{responsable_commande}</td></tr>'
-            html_invoice += f'<tr><td><b>Date</b></td><td>{datetime.now().strftime("%Y-%m-%d")}</td></tr>'
-            html_invoice += '</table><br><h3>DETAILS DES ARTICLES</h3>'
-            html_invoice += df_items.to_html(index=False, border=1)
-            html_invoice += '<br><h3>RECAPITULATIF FINANCIER</h3><table>'
-            html_invoice += f'<tr><td><b>TOTAL HT</b></td><td>{total_ht:.2f} DH</td></tr>'
-            html_invoice += f'<tr><td><b>TOTAL TTC</b></td><td>{total_ttc:.2f} DH</td></tr>'
-            html_invoice += f'<tr><td><b>TOTAL NET À PAYER</b></td><td><b>{total_net:.2f} DH</b></td></tr>'
-            html_invoice += f'<tr><td><b>Avance Versée</b></td><td>{avance:.2f} DH</td></tr>'
-            html_invoice += f'<tr><td><b>Reste à Payer</b></td><td><b>{reste_a_payer:.2f} DH</b></td></tr>'
-            html_invoice += '</table></body></html>'
-
+        with col_btn2:
+            html_invoice = f'<html><body><h2>BON DE COMMANDE - {nom_client}</h2></body></html>'
             buffer = io.BytesIO()
             buffer.write(html_invoice.encode('utf-8'))
             buffer.seek(0)
-
             st.download_button(
-                label="🖨️ Télécharger le Bon de Commande (HTML)",
-                data=buffer, file_name=f"Bon_Commande_{label_fichier}.html",
+                label="🖨️ Télécharger le Bon (HTML)",
+                data=buffer, file_name=f"Bon_{label_fichier}.html",
                 mime="text/html", use_container_width=True
             )
 
-# ================= PAGE 2 : HISTORIQUE & RECHERCHE =================
+# ================= PAGE 2 : HISTORIQUE & RECHERCHE (نظام المجلدات الثابت) =================
 elif page == "🗂️ Historique & Recherche":
     st.title("🗂️ Historique & Recherche (Système de Dossiers)")
+
+    st.markdown("### 📂 Choisissez un dossier (إختر مجلد المسؤول):")
+    dossier_selectionne = st.radio("مجلدات المسؤولين المتوفرة :", liste_responsables, key="folder_selection_radio", horizontal=True)
+
+    st.markdown(f"#### 📁 Dossier actuel : **{dossier_selectionne}**")
+
+    if not st.session_state["historique_commandes"]:
+        st.info("Aucune commande enregistrée dans le système.")
+    else:
+        df_hist = pd.DataFrame(st.session_state["historique_commandes"])
+        df_folder = df_hist[df_hist['Responsable'] == dossier_selectionne]
+
+        if df_folder.empty:
+            st.info(f"Le dossier de '{dossier_selectionne}' est vide pour le moment.")
+        else:
+            st.dataframe(df_folder, use_container_width=True)
+
+            st.subheader("🗑️ Actions / Supprimer")
+            list_docs = sorted(list(df_folder['N° Dossier'].unique()))
+            dossier_a_supprimer = st.selectbox("Sélectionnez le dossier à supprimer :", list_docs)
+
+            if st.button("❌ Envoyer à la corbeille"):
+                lignes_a_conserver = [c for c in st.session_state["historique_commandes"] if c["N° Dossier"] != dossier_a_supprimer]
+                lignes_a_supprimer = [c for c in st.session_state["historique_commandes"] if c["N° Dossier"] == dossier_a_supprimer]
+
+                st.session_state["historique_commandes"] = lignes_a_conserver
+                st.session_state["corbeille_commandes"].extend(lignes_a_supprimer)
+                st.success("Dossier envoyé à la corbeille !")
+                st.rerun()
+
+# ================= PAGE 3 : CORBEILLE (سلة المهملات المضمونة) =================
+else:
+    st.title("🗑️ Corbeille des dossiers supprimés")
+
+    if not st.session_state["corbeille_commandes"]:
+        st.info("La corbeille est vide.")
+    else:
+        df_corb = pd.DataFrame(st.session_state["corbeille_commandes"])
+        st.dataframe(df_corb, use_container_width=True)
+
+        list_corb = sorted(list(df_corb['N° Dossier'].unique()))
+        dossier_action = st.selectbox("Choisir un dossier :", list_corb)
+
+        if st.button("🔄 Restaurer le dossier"):
+            lignes_a_garder = [c for c in st.session_state["corbeille_commandes"] if c["N° Dossier"] != dossier_action]
+            lignes_a_restaurer = [c for c in st.session_state["corbeille_commandes"] if c["N° Dossier"] == dossier_action]
 
