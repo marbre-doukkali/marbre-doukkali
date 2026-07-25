@@ -24,7 +24,7 @@ if not st.session_state["authentifie"]:
             st.error("Mot de passe incorrect.")
     st.stop()
 
-# 2. Base de données الصلبة المستقرة بصيغة CSV لمنع كراش الموديلات واختفاء البيانات
+# 2. Base de données الصلبة المستقرة بصيغة CSV لمنع اختفاء البيانات
 DB_FILE = "database_marbre.csv"
 TRASH_FILE = "database_trash.csv"
 
@@ -145,7 +145,6 @@ if page == "📝 Saisie des Commandes":
 
             historique_total = charger_depot(DB_FILE)
 
-            # تم إصلاح مسميات المفاتيح هنا لتطابق مخرجات الجدول بدقة وتمنع الـ KeyError
             for item in st.session_state["panier_actuel"]:
                 historique_total.append({
                     "ID unique": id_commande,
@@ -203,8 +202,9 @@ elif page == "🗂️ Historique & Recherche":
         dossier_a_supprimer = st.selectbox("Sélectionnez le dossier à envoyer à la corbeille :", list_docs)
 
         if st.button("❌ Envoyer à la corbeille"):
+            # [إصلاح الحرف المطبعي الحاسم] تم تبسيط وتأمين دالة العزل والحذف لحذف الملف بنجاح
             lignes_a_conserver = [c for c in st.session_state["historique_commandes"] if str(c["N° Dossier"]) != str(dossier_a_supprimer)]
-            lignes_a_supprimer = [c for c in st.session_state["historique_commandes"] if str(c["N% Dossier"]) == str(dossier_a_supprimer) or str(c["N° Dossier"]) == str(dossier_a_supprimer)]
+            lignes_a_supprimer = [c for c in st.session_state["historique_commandes"] if str(c["N° Dossier"]) == str(dossier_a_supprimer)]
 
             corbeille_totale = charger_depot(TRASH_FILE)
             corbeille_totale.extend(lignes_a_supprimer)
@@ -226,3 +226,6 @@ elif page == "🗂️ Historique & Recherche":
             use_container_width=True
         )
 
+# ================= PAGE 3 : CORBEILLE =================
+else:
+    st.title("🗑️ Corbeille des dossiers supprimés")
