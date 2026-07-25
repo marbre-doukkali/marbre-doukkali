@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 # Appel sécurisé et protégé de la bibliothèque XGBoost (optionnelle, non bloquante)
 try:
@@ -15,7 +16,7 @@ except ImportError:
 st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
 
 # ⚠️ À remplacer par votre propre mot de passe sécurisé (idéalement via st.secrets)
-PASSWORD_SECRET = "2017@2026"
+PASSWORD_SECRET = "doukkali2026"
 
 liste_responsables = ["Ahmed", "Youssef", "Sara", "Mohamed"]
 
@@ -38,6 +39,47 @@ prix_materiaux = {
 }
 
 NOM_PAGE_ARCHIVE = "🗂️ الأرشيف والبحث الذكي"  # nom unique utilisé partout (radio + elif)
+
+
+def construire_recu_html(cmd_info, df_details_cmd):
+    """Construit un reçu HTML imprimable (RTL, arabe) pour un dossier donné."""
+    lignes_html = "".join(
+        f"<tr><td>{r['Désignation']}</td><td>{r['Matériau']}</td><td>{r['Dimensions']}</td>"
+        f"<td>{r['Quantité']}</td><td>{r['Surface (m2)']}</td><td>{r['Total HT (DH)']}</td></tr>"
+        for _, r in df_details_cmd.iterrows()
+    )
+    return f"""
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="utf-8">
+        <title>فاتورة {cmd_info['N° Dossier']}</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; padding: 25px; color: #0f172a; }}
+            h2, h3 {{ text-align: center; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
+            th, td {{ border: 1px solid #334155; padding: 8px; text-align: right; }}
+            th {{ background-color: #0f172a; color: #ffffff; }}
+            .totaux p {{ font-size: 16px; margin: 6px 0; }}
+        </style>
+    </head>
+    <body>
+        <h2>🧾 فاتورة رخام دكالة - رقم الملف {cmd_info['N° Dossier']}</h2>
+        <p>الزبون: <b>{cmd_info['Client']}</b> &nbsp;|&nbsp; المسؤول: <b>{cmd_info['Responsable']}</b> &nbsp;|&nbsp; التاريخ: {cmd_info['Date_H']}</p>
+        <table>
+            <tr><th>البيان</th><th>المادة</th><th>المقاس</th><th>الكمية</th><th>المساحة (m2)</th><th>الثمن HT (DH)</th></tr>
+            {lignes_html}
+        </table>
+        <div class="totaux">
+            <p>💰 المجموع HT: <b>{cmd_info['Total HT (DH)']:,.2f} DH</b></p>
+            <p>📈 المجموع TTC: <b>{cmd_info['Total TTC (DH)']:,.2f} DH</b></p>
+            <p>📉 التخفيض: <b>{cmd_info['Remise (%)']:,.1f}%</b></p>
+            <p>⭐ الصافي: <b>{cmd_info['Total Net (DH)']:,.2f} DH</b></p>
+            <p>💵 التسبيق: <b>{cmd_info['Avance (DH)']:,.2f} DH</b></p>
+            <p>🚨 الباقي: <b>{cmd_info['Reste à payer (DH)']:,.2f} DH</b></p>
+        </div>
+    </body>
+    </html>
+    """
 
 # ============================= CSS PERSONNALISÉ =============================
 st.markdown("""
@@ -250,7 +292,9 @@ elif page == NOM_PAGE_ARCHIVE:
         else:
             df_filtered = df_hist
 
-        st.dataframe(df_filtered.drop(columns=["Details"], errors="ignore"), use_container_width=True)
+        df_affichage = df_filtered[["N° Dossier"]].rename(columns={"N° Dossier": "رقم الملف"})
+        st.dataframe(df_affichage, use_container_width=True, hide_index=True)
+        st.caption(f"📁 عدد الملفات المطابقة : {len(df_affichage)}")
 
         st.markdown("### 🖨️ فحص تفاصيل القياسات للملف المحدد وتوليد مستند الـ Excel")
         liste_fichiers_dispo = df_filtered["N° Dossier"].unique()
@@ -270,15 +314,39 @@ elif page == NOM_PAGE_ARCHIVE:
                 df_details_cmd = pd.DataFrame(cmd_info["Details"])
                 st.dataframe(df_details_cmd, use_container_width=True)
 
+                # Choix automatique du moteur Excel disponible (corrige ModuleNotFoundError: xlsxwriter)
+                try:
+                    import xlsxwriter  # noqa: F401
+                    moteur_excel = "xlsxwriter"
+                except ImportError:
+                    moteur_excel = "openpyxl"
+
                 buffer = io.BytesIO()
-                with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+                with pd.ExcelWriter(buffer, engine=moteur_excel) as writer:
                     df_details_cmd.to_excel(writer, sheet_name="تفاصيل القياسات", index=False)
-                st.download_button(
-                    label="🖨️ اضغط هنا لتحميل كشف القياسات النهائي بصيغة Excel للزبون",
-                    data=buffer.getvalue(),
-                    file_name=f"كشف_حساب_الملف_{fichier_selectionne}.xlsx",
-                    mime="application/vnd.ms-excel"
-                )
+                col_dl, col_print = st.columns(2)
+                with col_dl:
+                    st.download_button(
+                        label="📥 تحميل كشف القياسات بصيغة Excel",
+                        data=buffer.getvalue(),
+                        file_name=f"كشف_حساب_الملف_{fichier_selectionne}.xlsx",
+                        mime="application/vnd.ms-excel"
+                    )
+                with col_print:
+                    if st.button("🖨️ طباعة الفاتورة"):
+                        html_recu = construire_recu_html(cmd_info, df_details_cmd)
+                        components.html(
+                            f"""
+                            <script>
+                            var w = window.open('', '_blank');
+                            w.document.write(`{html_recu}`);
+                            w.document.close();
+                            w.focus();
+                            setTimeout(function() {{ w.print(); }}, 300);
+                            </script>
+                            """,
+                            height=0
+                        )
 
                 st.markdown("---")
                 if st.button(f"🗑️ إرسال الملف {fichier_selectionne} بالكامل إلى سلة المهملات (إلغاء الطلبية)"):
