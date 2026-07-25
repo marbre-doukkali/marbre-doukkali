@@ -28,8 +28,8 @@ st.markdown("""
 .industrial-marble-m {
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* محاذاة من الأعلى لضبط انسيابية الحرف */
-    gap: 8px; /* تقريب الأعمدة لتبدو ككتلة واحدة متصلة */
+    align-items: flex-start;
+    gap: 8px;
     padding: 40px;
     background: linear-gradient(180deg, #1f2937 0%, #030712 100%);
     border: 2px solid #4b5563;
@@ -243,3 +243,6 @@ if page == "📝 Saisie des Commandes":
         <p>💵 Avance : <b>{avance:,.2f} DH</b></p>
         <p>🚨 Reste à payer : <span style='font-size:18px; color:#b91c1c;'><b>{reste_a_payer:,.2f} DH</b></span></p>
     </div>
+    """, unsafe_allow_html=True)
+
+    if reste_a_payer <= 0:
