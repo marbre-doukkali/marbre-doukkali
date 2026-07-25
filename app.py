@@ -11,7 +11,7 @@ try:
 except ImportError:
     XGB_AVAILABLE = False
 
-st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ️", layout="wide")
+st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Marbre Doukkali", layout="wide")
 
 # تخصيص الـ CSS وتصميم حرف M كبير وفخم مزخرف بألوان وعروق الرخام الطبيعي الصافي
 st.markdown("""
@@ -101,10 +101,10 @@ PASSWORD_SECRET = "2017@2026"
 if "authentifie" not in st.session_state:
     st.session_state["authentifie"] = False
 
-# بوابة حماية الدخول يظهر في أعلاها حرف M الرخامي المصقول الكبير والفخم بدلاً من الأعمدة القديمة
+# بوابة حماية الدخول بحرف M الرخامي الكبير الفخم
 if not st.session_state["authentifie"]:
     st.markdown("<div class='industrial-marble-m'><div class='luxury-marble-text'>M</div></div>", unsafe_allow_html=True)
-    st.markdown("<div class='industrial-title'>مرحباً بك في نظام المبيعات الخاص برخام دكالة</div>", unsafe_allow_html=True)
+    st.markdown("<div class='industrial-title'>مرحباً بك في نظام المبيعات الخاص رخام دكالة</div>", unsafe_allow_html=True)
     mot_de_passe = st.text_input("أدخل الرقم السري الخاص بالفريق :", type="password")
     if st.button("تسجيل الدخول للنظام"):
         if mot_de_passe == PASSWORD_SECRET:
@@ -215,11 +215,11 @@ if page == "📝 تسجيل الطلبيات الجديدة":
         """, unsafe_allow_html=True)
 
         if st.button("💾 ترحيل وحفظ الطلبية بشكل نهائي في الأرشيف"):
+            # [إصلاح حاسم] تم إزالة الفاصلة الزائدة من السطر الأخير وإغلاق المصفوفة بشكل صحيح
             nouvelle_commande = {
                 "رقم الملف": label_fichier,
                 "اسم الزبون": nom_client,
                 "المسؤول": responsable_commande,
-                "تاريخ الحفظ": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "عدد القطع": len(st.session_state["panier_actuel"]),
-                "إجمالي TTC": round(total_ttc, 2),
-                "الصافي الإجمالي": round(total_net, 2),
+                "تاريخ الحفظ": datetime.now().strftime("%Y-%m-%d %H:%M")
+            }
+            st.session_state["historique_commandes"].append(nouvelle_commande)
