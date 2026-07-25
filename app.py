@@ -18,24 +18,81 @@ st.set_page_config(page_title="Marbrerie ERP - Marbre Doukkali", page_icon="Ⓜ�
 # ⚠️ À remplacer par votre propre mot de passe sécurisé (idéalement via st.secrets)
 PASSWORD_SECRET = "doukkali2026"
 
-liste_responsables = ["Ahmed", "Youssef", "Sara", "Mohamed"]
+liste_responsables = ["Ahmed", "Youssef", "Sara", "Mohamed", "Autre (كتابة اسم آخر)"]
 
 liste_designations_prefere = [
     "Plan de travail cuisine",
     "Escalier",
+    "Marche d'escalier",
+    "Contremarche",
     "Revêtement de sol",
     "Revêtement mural",
+    "Seuil de porte",
+    "Rebord de fenêtre (Appui de fenêtre)",
+    "Plan de salle de bain (Vasque)",
+    "Douche à l'italienne",
+    "Tablette / Console",
+    "Colonne décorative",
+    "Plinthe",
+    "Pierre tombale",
+    "Fontaine décorative",
     "Autre (كتابة مخصصة)",
 ]
 
-liste_options_materiaux = ["Marbre Blanc", "Marbre Noir", "Granit Gris", "Travertin", "Onyx"]
+liste_options_materiaux = [
+    # --- Marbres ---
+    "Marbre Blanc Thassos",
+    "Marbre Blanc Carrara",
+    "Marbre Crema Marfil",
+    "Marbre Beige Marfil",
+    "Marbre Noir Marquina",
+    "Marbre Botticino",
+    "Marbre Rose",
+    "Marbre Vert",
+    "Marbre Doukkali",
+    "Marbre d'Agadir",
+    "Marbre de Marrakech",
+    "Onyx Blanc",
+    "Onyx Miel",
+    "Travertin Beige",
+    "Travertin Noce",
+    # --- Granits ---
+    "Granit Noir Zimbabwe",
+    "Granit Noir Absolu",
+    "Granit Gris Sardaigne",
+    "Granit Gris Perle",
+    "Granit Blanc Royal",
+    "Granit Rose Porrino",
+    "Granit Jaune Tropical",
+    "Granit Bleu Pearl",
+]
 
 prix_materiaux = {
-    "Marbre Blanc": 650,
-    "Marbre Noir": 800,
-    "Granit Gris": 550,
-    "Travertin": 500,
-    "Onyx": 1200,
+    # --- Marbres (DH / m2) ---
+    "Marbre Blanc Thassos": 900,
+    "Marbre Blanc Carrara": 850,
+    "Marbre Crema Marfil": 700,
+    "Marbre Beige Marfil": 650,
+    "Marbre Noir Marquina": 950,
+    "Marbre Botticino": 680,
+    "Marbre Rose": 750,
+    "Marbre Vert": 800,
+    "Marbre Doukkali": 600,
+    "Marbre d'Agadir": 620,
+    "Marbre de Marrakech": 640,
+    "Onyx Blanc": 1300,
+    "Onyx Miel": 1400,
+    "Travertin Beige": 500,
+    "Travertin Noce": 520,
+    # --- Granits (DH / m2) ---
+    "Granit Noir Zimbabwe": 850,
+    "Granit Noir Absolu": 900,
+    "Granit Gris Sardaigne": 600,
+    "Granit Gris Perle": 620,
+    "Granit Blanc Royal": 700,
+    "Granit Rose Porrino": 720,
+    "Granit Jaune Tropical": 780,
+    "Granit Bleu Pearl": 1100,
 }
 
 NOM_PAGE_ARCHIVE = "🗂️ الأرشيف والبحث الذكي"  # nom unique utilisé partout (radio + elif)
@@ -178,7 +235,11 @@ if page == "📝 تسجيل الطلبيات الجديدة":
     with col_info2:
         nom_client = st.text_input("اسم الزبون الحالي :", "Client_Anonyme")
     with col_info3:
-        responsable_commande = st.selectbox("المسؤول عن المتابعة (البائع) :", liste_responsables, index=0)
+        choix_responsable = st.selectbox("المسؤول عن المتابعة (البائع) :", liste_responsables, index=0)
+        responsable_commande = (
+            st.text_input("اكتب اسم المسؤول :", "")
+            if choix_responsable == "Autre (كتابة اسم آخر)" else choix_responsable
+        )
 
     st.markdown("### 🧱 2. مقاسات وأنواع الرخام")
     col_in1, col_in2, col_in3, col_in4 = st.columns(4)
@@ -295,6 +356,32 @@ elif page == NOM_PAGE_ARCHIVE:
         df_affichage = df_filtered[["N° Dossier"]].rename(columns={"N° Dossier": "رقم الملف"})
         st.dataframe(df_affichage, use_container_width=True, hide_index=True, height=220)
         st.caption(f"📁 عدد الملفات المطابقة : {len(df_affichage)}")
+
+        # ---- Export Excel du tableau complet de tous les dossiers filtrés ----
+        df_export_global = df_filtered.drop(columns=["Details"], errors="ignore")
+        buffer_global = None
+        erreur_excel_global = None
+        for moteur_essai in ("xlsxwriter", "openpyxl"):
+            try:
+                buffer_essai = io.BytesIO()
+                with pd.ExcelWriter(buffer_essai, engine=moteur_essai) as writer:
+                    df_export_global.to_excel(writer, sheet_name="قائمة الملفات", index=False)
+                buffer_global = buffer_essai
+                break
+            except Exception as e:
+                erreur_excel_global = str(e)
+                continue
+
+        if buffer_global:
+            st.download_button(
+                label="📊 تصدير جدول جميع الملفات إلى Excel",
+                data=buffer_global.getvalue(),
+                file_name="جدول_جميع_الملفات.xlsx",
+                mime="application/vnd.ms-excel",
+                key="export_global_excel"
+            )
+        else:
+            st.warning(f"⚠️ تصدير الجدول الكامل غير متوفر حالياً. التفاصيل: {erreur_excel_global}")
 
         st.markdown("##### 🗑️ حذف سريع (نقل مباشر إلى سلة المهملات) بدون فتح التفاصيل:")
         col_del1, col_del2 = st.columns([3, 1])
