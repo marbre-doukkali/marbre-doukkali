@@ -92,7 +92,7 @@ div[data-testid='stSidebar'] {
 
 PASSWORD_SECRET = "2017@2026"
 
-# إدارة متغيرات الجلسة السحابية والتحقق من الهوية
+# إدارة متغيرات الجلسة السحابية والتحقق من الهوية وضمان ثبات السجلات والأرشيف
 if "authentifie" not in st.session_state:
     st.session_state["authentifie"] = False
 
@@ -141,7 +141,7 @@ prix_materiaux = {
 
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 
-# القائمة المطلوبة مدمجة بالكامل بالترجمة العربية بين قوسين لعمود البيان الحاسم
+# خيارات حقل البيان (Désignation) ثنائي اللغة
 liste_designations_prefere = [
     "Escalier (درج)",
     "Plan de cuisine (مطبخ)",
@@ -177,7 +177,7 @@ if page == "📝 Saisie des Commandes":
     with col_info1:
         label_fichier = st.text_input("N° Dossier / Référence :", "DOS-2026-001")
     with col_info2:
-        nom_client = st.text_input("Nom du client :", "Client_Anonymه")
+        nom_client = st.text_input("Nom du client :", "Client_Anonyme")
     with col_info3:
         responsable_commande = st.selectbox("Responsable du suivi (Vendeur) :", liste_responsables, index=0)
 
@@ -185,7 +185,6 @@ if page == "📝 Saisie des Commandes":
 
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
 
-    # دمج تصفية الاختيارات ثنائية اللغة لعمود الـ Désignation داخل جدول التعديل السريع
     edited_df = st.data_editor(
         df_form,
         num_rows="dynamic",
@@ -265,3 +264,5 @@ if page == "📝 Saisie des Commandes":
     if reste_a_payer <= 0:
         st.success("Facture Entièrement Payée")
 
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
