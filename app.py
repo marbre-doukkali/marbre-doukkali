@@ -37,6 +37,9 @@ prix_materiaux = {
 
 liste_options_materiaux = sorted(list(prix_materiaux.keys()))
 
+# قائمة المسؤولين والباعة بالورشة (يمكنك تعديلها أو الإضافة عليها بيدك)
+liste_responsables = ["الطوسي (El Tossi)", "Nadim Jadoui", "Responsable Standard"]
+
 if "historique_commandes" not in st.session_state:
     st.session_state["historique_commandes"] = []
 
@@ -74,7 +77,8 @@ if page == "📝 Saisie des Commandes":
     with col_info2:
         nom_client = st.text_input("Nom du client :", "Client_Anonyme")
     with col_info3:
-        responsable_commande = st.text_input("Responsable du suivi (Vendeur) :", "Nadim Jadoui")
+        # [تحديث] تغيير خانة المسؤول لتصبح قائمة منسدلة (سهم) تحتوي على اسم الطوسي جاهزاً للضبط والاختيار
+        responsable_commande = st.selectbox("Responsable du suivi (Vendeur) :", liste_responsables, index=0)
 
     st.header("📊 Tableau des Articles (Style Excel)")
     df_form = pd.DataFrame(st.session_state["lignes_commande"])
@@ -169,7 +173,7 @@ if page == "📝 Saisie des Commandes":
                     "Total HT Commande (DH)": round(total_ht, 2), "Total TTC (DH)": round(total_net, 2),
                     "Avance (DH)": round(avance, 2), "Reste (DH)": round(reste_a_payer, 2)
                 })
-            st.success("Commande enregistrée avec succès dans l'historique !")
+            st.success(f"Commande de {nom_client} suivie par {responsable_commande} enregistrée avec succès !")
 
     with col_btn2:
         if panier_final:
@@ -215,9 +219,3 @@ elif page == "🗂️ Historique & Recherche":
     else:
         df_hist = pd.DataFrame(st.session_state["historique_commandes"])
 
-        # إصلاح أسلوب البحث لتجنب تراكم شروط الفلترة المسببة لفتح الأقواس بشكل خاطئ
-        recherche = st.text_input("🔍 Rechercher par N° Dossier, Client ou Matériau :", key="search_bar_input")
-
-        if recherche:
-            req = recherche.lower().strip()
-            cond_dossier = df_hist['N° Dossier'].astype(str).str.lower().str.contains(req, na=False)
