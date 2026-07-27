@@ -39,11 +39,7 @@ liste_designations_prefere = [
     "Autre (كتابة مخصصة)",
 ]
 
-# 🛠️ تم تصحيح المصفوفة لتتوافق مع Python وإزالة كلمة const
 catalogueCalculPierre = [
-    # ==========================================
-    # 1. أنواع الغرانيت والكوارتز الشاملة (Tout Granette & Quartz)
-    # ==========================================
     { "id": "noir_galaxy", "name": "Noir Galaxy", "type": "Granit", "origin": "Importé (Inde)", "price": 1450 },
     { "id": "noir_zimbabwe", "name": "Noir Zimbabwe", "type": "Granit", "origin": "Importé", "price": 1550 },
     { "id": "noir_absolu", "name": "Noir Absolu", "type": "Granit", "origin": "Importé", "price": 1600 },
@@ -60,11 +56,6 @@ catalogueCalculPierre = [
     { "id": "quartz_blanc_pur", "name": "Quartz Blanc Pur", "type": "Quartz", "origin": "Importé", "price": 1300 },
     { "id": "quartz_calacatta", "name": "Quartz Calacatta", "type": "Quartz", "origin": "Importé", "price": 1850 },
     { "id": "gris_maroc", "name": "Gris Maroc", "type": "Granit", "origin": "Local (Maroc)", "price": 400 },
-
-    # ==========================================
-    # 2. أنواع الرخام الشاملة (Tout Marbre)
-    # ==========================================
-    # الرخام المستورد (Marbre Importé)
     { "id": "calacatta", "name": "Calacatta Blanc", "type": "Marbre", "origin": "Importé (Italie)", "price": 2150 },
     { "id": "statuaire", "name": "Statuario", "type": "Marbre", "origin": "Importé (Italie)", "price": 2300 },
     { "id": "carrara_blanc", "name": "Carrara Blanc", "type": "Marbre", "origin": "Importé (Italie)", "price": 1100 },
@@ -75,8 +66,6 @@ catalogueCalculPierre = [
     { "id": "travertin_import", "name": "Travertin Romano", "type": "Marbre", "origin": "Importé (Turquie)", "price": 450 },
     { "id": "rosso_alicante", "name": "Rosso Alicante", "type": "Marbre", "origin": "Importé", "price": 650 },
     { "id": "onyx_marbre", "name": "Onyx Translucide", "type": "Marbre", "origin": "Exotique", "price": 3200 },
-
-    # الرخام المحلي المغربي (Marbre Local Maroc)
     { "id": "tiflet_gris", "name": "Gris Tiflet", "type": "Marbre", "origin": "Local (Maroc)", "price": 420 },
     { "id": "noir_khenifra", "name": "Noir Khénifra", "type": "Marbre", "origin": "Local (Maroc)", "price": 850 },
     { "id": "volubilis", "name": "Volubilis", "type": "Marbre", "origin": "Local (Maroc)", "price": 380 },
@@ -85,6 +74,9 @@ catalogueCalculPierre = [
     { "id": "jaune_marly", "name": "Jaune Marly", "type": "Marbre", "origin": "Local (Maroc)", "price": 320 },
     { "id": "sky_maroc", "name": "Sky Maroc (Gris)", "type": "Marbre", "origin": "Local (Maroc)", "price": 390 }
 ]
+
+# 🛠️ إصلاح: تم إنشاء قاموس (dict) يربط اسم كل رخامة بثمنها لكي نستعمله عند حساب السعر
+prix_materiaux = {p["name"]: p["price"] for p in catalogueCalculPierre}
 
 NOM_PAGE_ARCHIVE = "🗂️ الأرشيف والبحث الذكي"  # nom unique utilisé partout (radio + elif)
 
@@ -128,7 +120,7 @@ def construire_recu_html(cmd_info, df_details_cmd):
         </table>
         <div class="totaux">
             <p>💰 المجموع HT: <b>{cmd_info['Total HT (DH)']:,.2f} DH</b></p>
-            <p>📈 المجموع TTC: <b>{cmd_info['Total HT (DH)'] * 1.2:,.2f} DH</b></p>
+            <p>📈 المجموع TTC: <b>{cmd_info['Total HT (DH)'] * 1.5:,.2f} DH</b></p>
             <p>📉 التخفيض: <b>{cmd_info['Remise (%)']:,.1f}%</b></p>
             <p>⭐ الصافي: <b>{cmd_info['Total Net (DH)']:,.2f} DH</b></p>
             <p>💵 التسبيق: <b>{cmd_info['Avance (DH)']:,.2f} DH</b></p>
@@ -139,7 +131,6 @@ def construire_recu_html(cmd_info, df_details_cmd):
     """
 
 # ============================= CSS PERSONNALISÉ =============================
-# 🛠️ تم إغلاق كود الـ CSS بالكامل لحل مشكلة عدم ظهور أي شيء على الشاشة بسبب قطع النص
 st.markdown("""
 <style>
 .stApp {
@@ -163,7 +154,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================= INITIALISATION DE L'ÉTAT DE SESSION =============================
-# (Corrigé : sans cette étape, le premier lancement provoquait une KeyError)
 for cle, valeur_defaut in [
     ("authentifie", False),
     ("panier_actuel", []),
@@ -184,7 +174,7 @@ if not st.session_state["authentifie"]:
             st.rerun()
         else:
             st.error("كلمة السر غير صحيحة، حاول مجدداً.")
-    st.stop()  # Corrigé : empêche l'exécution du reste de l'application avant connexion
+    st.stop()
 
 # ============================= BARRE LATÉRALE =============================
 st.sidebar.markdown(
@@ -224,14 +214,44 @@ if page == "📝 تسجيل الطلبيات الجديدة":
             if choix_responsable == "Autre (كتابة اسم آخر)" else choix_responsable
         )
 
-    st.markdown("### 🧱 2. مقاسات وأنواع الرخام")
+    st.markdown("### 💎 2. جدول أسعار جميع أنواع الغرانيت والرخام (Catalogue des prix)")
+    df_catalogue = pd.DataFrame(catalogueCalculPierre)[["name", "type", "origin", "price"]].rename(
+        columns={"name": "الاسم", "type": "النوع", "origin": "المنشأ", "price": "السعر (DH/m²)"}
+    )
+
+    col_filtre_type, col_filtre_recherche = st.columns([1, 2])
+    with col_filtre_type:
+        types_dispo = ["الكل"] + sorted(df_catalogue["النوع"].unique().tolist())
+        filtre_type = st.selectbox("🔎 تصفية حسب النوع :", types_dispo)
+    with col_filtre_recherche:
+        filtre_recherche = st.text_input("🔎 بحث عن اسم الرخام/الغرانيت :", "")
+
+    df_catalogue_affiche = df_catalogue.copy()
+    if filtre_type != "الكل":
+        df_catalogue_affiche = df_catalogue_affiche[df_catalogue_affiche["النوع"] == filtre_type]
+    if filtre_recherche:
+        df_catalogue_affiche = df_catalogue_affiche[
+            df_catalogue_affiche["الاسم"].str.lower().str.contains(filtre_recherche.lower().strip(), na=False)
+        ]
+
+    st.dataframe(
+        df_catalogue_affiche.sort_values("السعر (DH/m²)"),
+        use_container_width=True,
+        hide_index=True,
+        height=250,
+    )
+    st.caption(f"📦 عدد الأنواع المعروضة : {len(df_catalogue_affiche)} / {len(df_catalogue)}")
+
+    st.markdown("### 🧱 3. مقاسات وأنواع الرخام المختارة للقطعة الحالية")
     col_in1, col_in2, col_in3, col_in4 = st.columns(4)
     with col_in1:
         choix_des = st.selectbox("Désignation (البيان) :", liste_designations_prefere)
         input_des = st.text_input("بيان مخصص :", "Élément unique") if choix_des == "Autre (كتابة مخصصة)" else choix_des
     with col_in2:
+        # 🛠️ إصلاح: كانت هذه الخانة تحسب اللائحة فقط دون عرضها،
+        # فكانت المتغيرة input_mat غير موجودة إطلاقاً (NameError عند الضغط على زر الإضافة)
         liste_options_materiaux = [p['name'] for p in catalogueCalculPierre]
-
+        input_mat = st.selectbox("Matériau (نوع الرخام) :", liste_options_materiaux)
     with col_in3:
         input_long = st.number_input("الطول (m) :", min_value=0.01, value=1.00, step=0.01)
     with col_in4:
@@ -268,7 +288,7 @@ if page == "📝 تسجيل الطلبيات الجديدة":
             st.rerun()
 
         total_ht = df_panier["Total HT (DH)"].sum()
-        total_ttc = total_ht * 1.2
+        total_ttc = total_ht * 1.5
         remise = st.number_input("نسبة التخفيض (%) Remise :", min_value=0.0, max_value=100.0, value=0.0)
         avance = st.number_input("مبلغ التسبيق المدفوع (DH) :", min_value=0.0, value=0.0)
 
@@ -276,13 +296,12 @@ if page == "📝 تسجيل الطلبيات الجديدة":
         total_net = total_ttc - montant_remise
         reste_a_payer = total_net - avance
 
-        # Le symbole % est isolé dans une variable pour éviter une f-string mal terminée
         sym_p = "%"
         st.markdown(f"""
         <div class='marble-panel'>
             <h3 style='color:#0f172a !important; border-bottom:2px solid #0f172a;'>🧾 تفاصيل كشف الحساب المالي للملف</h3>
             <p>💰 إجمالي السعر قبل الاحتساب (HT): <b>{total_ht:,.2f} DH</b></p>
-            <p>📈 إجمالي السعر شامل الرسوم (TTC 20%): <b>{total_ttc:,.2f} DH</b></p>
+            <p>📈 إجمالي السعر شامل الرسوم (TTC 50%): <b>{total_ttc:,.2f} DH</b></p>
             <p>📉 قيمة التخفيض التجاري الممنوح: <b>{montant_remise:,.2f} DH ({remise:,.1f}{sym_p})</b></p>
             <p>⭐ الصافي المطلوب دفعه نهائياً (NET): <span style='font-size:20px; color:#15803d;'><b>{total_net:,.2f} DH</b></span></p>
             <p>💵 مبلغ التسبيق المدفوع مسبقاً (Avance): <b>{avance:,.2f} DH</b></p>
@@ -341,7 +360,6 @@ elif page == NOM_PAGE_ARCHIVE:
         st.dataframe(df_affichage, use_container_width=True, hide_index=True, height=220)
         st.caption(f"📁 عدد الملفات المطابقة : {len(df_affichage)}")
 
-        # ---- Export Excel du tableau complet de tous les dossiers filtrés ----
         df_export_global = df_filtered.drop(columns=["Details"], errors="ignore")
         buffer_global = None
         erreur_excel_global = None
@@ -410,7 +428,6 @@ elif page == NOM_PAGE_ARCHIVE:
                 df_details_cmd = pd.DataFrame(cmd_info["Details"])
                 st.dataframe(df_details_cmd, use_container_width=True, height=220)
 
-                # Choix automatique du moteur Excel disponible + capture de toute erreur d'exécution
                 buffer = None
                 erreur_excel = None
                 for moteur_essai in ("xlsxwriter", "openpyxl"):
