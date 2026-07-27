@@ -230,7 +230,8 @@ if page == "📝 تسجيل الطلبيات الجديدة":
         choix_des = st.selectbox("Désignation (البيان) :", liste_designations_prefere)
         input_des = st.text_input("بيان مخصص :", "Élément unique") if choix_des == "Autre (كتابة مخصصة)" else choix_des
     with col_in2:
-        input_mat = st.selectbox("Matériau (نوع الرخام) :", liste_options_materiaux)
+        liste_options_materiaux = [p['name'] for p in catalogueCalculPierre]
+
     with col_in3:
         input_long = st.number_input("الطول (m) :", min_value=0.01, value=1.00, step=0.01)
     with col_in4:
