@@ -39,51 +39,51 @@ liste_designations_prefere = [
     "Autre (كتابة مخصصة)",
 ]
 
-const catalogueCalculPierre = [
-  // ==========================================
-  // 1. أنواع الغرانيت والكوارتز الشاملة (Tout Granette & Quartz)
-  // ==========================================
-  { id: "noir_galaxy", name: "Noir Galaxy", type: "Granit", origin: "Importé (Inde)", price: 1450 },
-  { id: "noir_zimbabwe", name: "Noir Zimbabwe", type: "Granit", origin: "Importé", price: 1550 },
-  { id: "noir_absolu", name: "Noir Absolu", type: "Granit", origin: "Importé", price: 1600 },
-  { id: "blue_pearl", name: "Blue Pearl", type: "Granit", origin: "Importé (Norvège)", price: 1750 },
-  { id: "gris_espagnol", name: "Gris Espagnol", type: "Granit", origin: "Importé (Espagne)", price: 600 },
-  { id: "bianco_sardo", name: "Bianco Sardo", type: "Granit", origin: "Importé (Italie)", price: 650 },
-  { id: "tan_brown", name: "Tan Brown", type: "Granit", origin: "Importé", price: 750 },
-  { id: "kashmir_white", name: "Kashmir White", type: "Granit", origin: "Importé", price: 1200 },
-  { id: "titanium_gold", name: "Titanium Gold", type: "Granit", origin: "Exotique", price: 1900 },
-  { id: "steel_grey", name: "Steel Grey", type: "Granit", origin: "Importé", price: 800 },
-  { id: "black_pearl", name: "Black Pearl", type: "Granit", origin: "Importé", price: 850 },
-  { id: "verde_butterfly", name: "Verde Butterfly", type: "Granit", origin: "Importé", price: 900 },
-  { id: "rosa_porrino", name: "Rosa Porrino", type: "Granit", origin: "Importé", price: 580 },
-  { id: "quartz_blanc_pur", name: "Quartz Blanc Pur", type: "Quartz", origin: "Importé", price: 1300 },
-  { id: "quartz_calacatta", name: "Quartz Calacatta", type: "Quartz", origin: "Importé", price: 1850 },
-  { id: "gris_maroc", name: "Gris Maroc", type: "Granit", origin: "Local (Maroc)", price: 400 },
+catalogueCalculPierre = [
+    # ==========================================
+    # 1. أنواع الغرانيت والكوارتز الشاملة (Tout Granette & Quartz)
+    # ==========================================
+    { "id": "noir_galaxy", "name": "Noir Galaxy", "type": "Granit", "origin": "Importé (Inde)", "price": 1450 },
+    { "id": "noir_zimbabwe", "name": "Noir Zimbabwe", "type": "Granit", "origin": "Importé", "price": 1550 },
+    { "id": "noir_absolu", "name": "Noir Absolu", "type": "Granit", "origin": "Importé", "price": 1600 },
+    { "id": "blue_pearl", "name": "Blue Pearl", "type": "Granit", "origin": "Importé (Norvège)", "price": 1750 },
+    { "id": "gris_espagnol", "name": "Gris Espagnol", "type": "Granit", "origin": "Importé (Espagne)", "price": 600 },
+    { "id": "bianco_sardo", "name": "Bianco Sardo", "type": "Granit", "origin": "Importé (Italie)", "price": 650 },
+    { "id": "tan_brown", "name": "Tan Brown", "type": "Granit", "origin": "Importé", "price": 750 },
+    { "id": "kashmir_white", "name": "Kashmir White", "type": "Granit", "origin": "Importé", "price": 1200 },
+    { "id": "titanium_gold", "name": "Titanium Gold", "type": "Granit", "origin": "Exotique", "price": 1900 },
+    { "id": "steel_grey", "name": "Steel Grey", "type": "Granit", "origin": "Importé", "price": 800 },
+    { "id": "black_pearl", "name": "Black Pearl", "type": "Granit", "origin": "Importé", "price": 850 },
+    { "id": "verde_butterfly", "name": "Verde Butterfly", "type": "Granit", "origin": "Importé", "price": 900 },
+    { "id": "rosa_porrino", "name": "Rosa Porrino", "type": "Granit", "origin": "Importé", "price": 580 },
+    { "id": "quartz_blanc_pur", "name": "Quartz Blanc Pur", "type": "Quartz", "origin": "Importé", "price": 1300 },
+    { "id": "quartz_calacatta", "name": "Quartz Calacatta", "type": "Quartz", "origin": "Importé", "price": 1850 },
+    { "id": "gris_maroc", "name": "Gris Maroc", "type": "Granit", "origin": "Local (Maroc)", "price": 400 },
 
-  // ==========================================
-  // 2. أنواع الرخام الشاملة (Tout Marbre)
-  // ==========================================
-  // الرخام المستورد (Marbre Importé)
-  { id: "calacatta", name: "Calacatta Blanc", type: "Marbre", origin: "Importé (Italie)", price: 2150 },
-  { id: "statuaire", name: "Statuario", type: "Marbre", origin: "Importé (Italie)", price: 2300 },
-  { id: "carrara_blanc", name: "Carrara Blanc", type: "Marbre", origin: "Importé (Italie)", price: 1100 },
-  { id: "crema_marfil", name: "Crema Marfil", type: "Marbre", origin: "Importé (Espagne)", price: 550 },
-  { id: "marquina_noir", name: "Marquina Noir", type: "Marbre", origin: "Importé (Espagne)", price: 700 },
-  { id: "emparador_dark", name: "Emperador Dark", type: "Marbre", origin: "Importé", price: 850 },
-  { id: "emparador_light", name: "Emperador Light", type: "Marbre", origin: "Importé", price: 750 },
-  { id: "travertin_import", name: "Travertin Romano", type: "Marbre", origin: "Importé (Turquie)", price: 450 },
-  { id: "rosso_alicante", name: "Rosso Alicante", type: "Marbre", origin: "Importé", price: 650 },
-  { id: "onyx_marbre", name: "Onyx Translucide", type: "Marbre", origin: "Exotique", price: 3200 },
+    # ==========================================
+    # 2. أنواع الرخام الشاملة (Tout Marbre)
+    # ==========================================
+    # الرخام المستورد (Marbre Importé)
+    { "id": "calacatta", "name": "Calacatta Blanc", "type": "Marbre", "origin": "Importé (Italie)", "price": 2150 },
+    { "id": "statuaire", "name": "Statuario", "type": "Marbre", "origin": "Importé (Italie)", "price": 2300 },
+    { "id": "carrara_blanc", "name": "Carrara Blanc", "type": "Marbre", "origin": "Importé (Italie)", "price": 1100 },
+    { "id": "crema_marfil", "name": "Crema Marfil", "type": "Marbre", "origin": "Importé (Espagne)", "price": 550 },
+    { "id": "marquina_noir", "name": "Marquina Noir", "type": "Marbre", "origin": "Importé (Espagne)", "price": 700 },
+    { "id": "emparador_dark", "name": "Emperador Dark", "type": "Marbre", "origin": "Importé", "price": 850 },
+    { "id": "emparador_light", "name": "Emperador Light", "type": "Marbre", "origin": "Importé", "price": 750 },
+    { "id": "travertin_import", "name": "Travertin Romano", "type": "Marbre", "origin": "Importé (Turquie)", "price": 450 },
+    { "id": "rosso_alicante", "name": "Rosso Alicante", "type": "Marbre", "origin": "Importé", "price": 650 },
+    { "id": "onyx_marbre", "name": "Onyx Translucide", "type": "Marbre", "origin": "Exotique", "price": 3200 },
 
-  // الرخام المحلي المغربي (Marbre Local Maroc)
-  { id: "tiflet_gris", name: "Gris Tiflet", type: "Marbre", origin: "Local (Maroc)", price: 420 },
-  { id: "noir_khenifra", name: "Noir Khénifra", type: "Marbre", origin: "Local (Maroc)", price: 850 },
-  { id: "volubilis", name: "Volubilis", type: "Marbre", origin: "Local (Maroc)", price: 380 },
-  { id: "beige_taza", name: "Pierre de Taza", type: "Marbre", origin: "Local (Maroc)", price: 350 },
-  { id: "rouge_agadir", name: "Rouge Agadir", type: "Marbre", origin: "Local (Maroc)", price: 300 },
-  { id: "jaune_marly", name: "Jaune Marly", type: "Marbre", origin: "Local (Maroc)", price: 320 },
-  { id: "sky_maroc", name: "Sky Maroc (Gris)", type: "Marbre", origin: "Local (Maroc)", price: 390 }
-];
+    # الرخام المحلي المغربي (Marbre Local Maroc)
+    { "id": "tiflet_gris", "name": "Gris Tiflet", "type": "Marbre", "origin": "Local (Maroc)", "price": 420 },
+    { "id": "noir_khenifra", "name": "Noir Khénifra", "type": "Marbre", "origin": "Local (Maroc)", "price": 850 },
+    { "id": "volubilis", "name": "Volubilis", "type": "Marbre", "origin": "Local (Maroc)", "price": 380 },
+    { "id": "beige_taza", "name": "Pierre de Taza", "type": "Marbre", "origin": "Local (Maroc)", "price": 350 },
+    { "id": "rouge_agadir", "name": "Rouge Agadir", "type": "Marbre", "origin": "Local (Maroc)", "price": 300 },
+    { "id": "jaune_marly", "name": "Jaune Marly", "type": "Marbre", "origin": "Local (Maroc)", "price": 320 },
+    { "id": "sky_maroc", "name": "Sky Maroc (Gris)", "type": "Marbre", "origin": "Local (Maroc)", "price": 390 }
+]
 
 NOM_PAGE_ARCHIVE = "🗂️ الأرشيف والبحث الذكي"  # nom unique utilisé partout (radio + elif)
 
